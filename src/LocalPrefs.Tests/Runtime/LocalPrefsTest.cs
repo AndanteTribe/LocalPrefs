@@ -2,54 +2,20 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using AndanteTribe.IO.Json;
-using AndanteTribe.IO.MessagePack;
-using MessagePack;
+using System.Threading.Tasks;
 using NUnit.Framework;
-using Task = System.Threading.Tasks.Task;
 
 namespace AndanteTribe.IO.Tests
 {
-    public class LocalPrefsTest
+    public static class LocalPrefsTest
     {
-#if UNITY_EDITOR
-        private static string TestFilePath => UnityEngine.Application.persistentDataPath + "/localprefs-test";
+#if (!UNITY_EDITOR && UNITY_WEBGL) || DOTNET_TEST
+        public const string TestFilePath = "localprefs-test";
 #else
-        private const string TestFilePath = "template";
+        public static string TestFilePath => UnityEngine.Application.persistentDataPath + "/localprefs-test";
 #endif
 
-        private static readonly Func<ILocalPrefs>[] s_factories =
-        {
-            () => new JsonLocalPrefs(TestFilePath),
-            () => new MessagePackLocalPrefs(TestFilePath),
-        };
-
-        [MessagePackObject]
-        public record CustomData
-        {
-            [Key(0)]
-            public int Id { get; init; }
-            [Key(1)]
-            public string? Name { get; init; }
-        }
-
-        [SetUp]
-        public void Setup()
-        {
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            if (File.Exists(TestFilePath))
-            {
-                File.Delete(TestFilePath);
-            }
-        }
-
-        [TestCaseSource(nameof(s_factories))]
-        public async Task SaveAndLoad_Int(Func<ILocalPrefs> factory)
+        public static async Task SaveAndLoad_Int(Func<ILocalPrefs> factory)
         {
             var prefs = factory();
             await prefs.SaveAsync("intKey", 123);
@@ -57,8 +23,7 @@ namespace AndanteTribe.IO.Tests
             Assert.That(value, Is.EqualTo(123));
         }
 
-        [TestCaseSource(nameof(s_factories))]
-        public async Task SaveAndLoad_Int_OtherInstance(Func<ILocalPrefs> factory)
+        public static async Task SaveAndLoad_Int_OtherInstance(Func<ILocalPrefs> factory)
         {
             var prefs1 = factory();
             await prefs1.SaveAsync("intKey", 123);
@@ -67,8 +32,7 @@ namespace AndanteTribe.IO.Tests
             Assert.That(value, Is.EqualTo(123));
         }
 
-        [TestCaseSource(nameof(s_factories))]
-        public async Task SaveAndLoad_String(Func<ILocalPrefs> factory)
+        public static async Task SaveAndLoad_String(Func<ILocalPrefs> factory)
         {
             var prefs = factory();
             await prefs.SaveAsync("strKey", "hello");
@@ -76,8 +40,7 @@ namespace AndanteTribe.IO.Tests
             Assert.That(value, Is.EqualTo("hello"));
         }
 
-        [TestCaseSource(nameof(s_factories))]
-        public async Task SaveAndLoad_String_OtherInstance(Func<ILocalPrefs> factory)
+        public static async Task SaveAndLoad_String_OtherInstance(Func<ILocalPrefs> factory)
         {
             var prefs1 = factory();
             await prefs1.SaveAsync("strKey", "hello");
@@ -86,8 +49,7 @@ namespace AndanteTribe.IO.Tests
             Assert.That(value, Is.EqualTo("hello"));
         }
 
-        [TestCaseSource(nameof(s_factories))]
-        public async Task SaveAndLoad_CustomType(Func<ILocalPrefs> factory)
+        public static async Task SaveAndLoad_CustomType(Func<ILocalPrefs> factory)
         {
             var prefs = factory();
             var data = new CustomData { Id = 1, Name = "abc" };
@@ -96,8 +58,7 @@ namespace AndanteTribe.IO.Tests
             Assert.That(loaded, Is.EqualTo(data));
         }
 
-        [TestCaseSource(nameof(s_factories))]
-        public async Task SaveAndLoad_CustomType_OtherInstance(Func<ILocalPrefs> factory)
+        public static async Task SaveAndLoad_CustomType_OtherInstance(Func<ILocalPrefs> factory)
         {
             var prefs1 = factory();
             var data = new CustomData { Id = 1, Name = "abc" };
@@ -107,8 +68,7 @@ namespace AndanteTribe.IO.Tests
             Assert.That(loaded, Is.EqualTo(data));
         }
 
-        [TestCaseSource(nameof(s_factories))]
-        public async Task OverwriteValue(Func<ILocalPrefs> factory)
+        public static async Task OverwriteValue(Func<ILocalPrefs> factory)
         {
             var prefs = factory();
             await prefs.SaveAsync("key", 1);
@@ -117,8 +77,7 @@ namespace AndanteTribe.IO.Tests
             Assert.That(value, Is.EqualTo(2));
         }
 
-        [TestCaseSource(nameof(s_factories))]
-        public async Task OverwriteValue_OtherInstance(Func<ILocalPrefs> factory)
+        public static async Task OverwriteValue_OtherInstance(Func<ILocalPrefs> factory)
         {
             var prefs1 = factory();
             await prefs1.SaveAsync("key", 1);
@@ -129,8 +88,7 @@ namespace AndanteTribe.IO.Tests
             Assert.That(value, Is.EqualTo(2));
         }
 
-        [TestCaseSource(nameof(s_factories))]
-        public async Task HasKey_Works(Func<ILocalPrefs> factory)
+        public static async Task HasKey_Works(Func<ILocalPrefs> factory)
         {
             var prefs = factory();
             Assert.That(prefs.HasKey("k"), Is.False);
@@ -138,19 +96,16 @@ namespace AndanteTribe.IO.Tests
             Assert.That(prefs.HasKey("k"), Is.True);
         }
 
-        [TestCaseSource(nameof(s_factories))]
-        public async Task HasKey_Works_OtherInstance(Func<ILocalPrefs> factory)
+        public static async Task HasKey_Works_OtherInstance(Func<ILocalPrefs> factory)
         {
             var prefs1 = factory();
             Assert.That(prefs1.HasKey("k"), Is.False);
             await prefs1.SaveAsync("k", 42);
-
             var prefs2 = factory();
             Assert.That(prefs2.HasKey("k"), Is.True);
         }
 
-        [TestCaseSource(nameof(s_factories))]
-        public async Task Delete_RemovesKey(Func<ILocalPrefs> factory)
+        public static async Task Delete_RemovesKey(Func<ILocalPrefs> factory)
         {
             var prefs = factory();
             await prefs.SaveAsync("del", 99);
@@ -160,30 +115,34 @@ namespace AndanteTribe.IO.Tests
             Assert.That(prefs.Load<int>("del"), Is.EqualTo(0));
         }
 
-        [TestCaseSource(nameof(s_factories))]
-        public async Task Delete_RemovesKey_OtherInstance(Func<ILocalPrefs> factory)
+        public static async Task Delete_RemovesKey_OtherInstance(Func<ILocalPrefs> factory)
         {
             var prefs1 = factory();
             await prefs1.SaveAsync("del", 99);
             Assert.That(prefs1.HasKey("del"), Is.True);
-
             var prefs2 = factory();
             await prefs2.DeleteAsync("del");
-
             var prefs3 = factory();
             Assert.That(prefs3.HasKey("del"), Is.False);
             Assert.That(prefs3.Load<int>("del"), Is.EqualTo(0));
         }
 
-        [TestCaseSource(nameof(s_factories))]
-        public void Delete_EmptyPrefs_Throws(Func<ILocalPrefs> factory)
+        public static async Task Delete_EmptyPrefs_Throws(Func<ILocalPrefs> factory)
         {
             var prefs = factory();
-            Assert.That(async () => await prefs.DeleteAsync("notfound"), Throws.TypeOf<KeyNotFoundException>());
+            try
+            {
+                await prefs.DeleteAsync("notfound");
+            }
+            catch (KeyNotFoundException)
+            {
+                Assert.That(true);
+                return;
+            }
+            Assert.That(false);
         }
 
-        [TestCaseSource(nameof(s_factories))]
-        public async Task DeleteAll_RemovesAll(Func<ILocalPrefs> factory)
+        public static async Task DeleteAll_RemovesAll(Func<ILocalPrefs> factory)
         {
             var prefs = factory();
             await prefs.SaveAsync("a", 1);
@@ -193,38 +152,41 @@ namespace AndanteTribe.IO.Tests
             Assert.That(prefs.HasKey("b"), Is.False);
         }
 
-        [TestCaseSource(nameof(s_factories))]
-        public async Task DeleteAll_RemovesAll_OtherInstance(Func<ILocalPrefs> factory)
+        public static async Task DeleteAll_RemovesAll_OtherInstance(Func<ILocalPrefs> factory)
         {
             var prefs1 = factory();
             await prefs1.SaveAsync("a", 1);
             await prefs1.SaveAsync("b", 2);
-
             var prefs2 = factory();
             await prefs2.DeleteAllAsync();
-
             var prefs3 = factory();
             Assert.That(prefs3.HasKey("a"), Is.False);
             Assert.That(prefs3.HasKey("b"), Is.False);
         }
 
-        [TestCaseSource(nameof(s_factories))]
-        public void Load_NonExistentKey_ReturnsDefault(Func<ILocalPrefs> factory)
+        public static void Load_NonExistentKey_ReturnsDefault(Func<ILocalPrefs> factory)
         {
             var prefs = factory();
             var value = prefs.Load<string>("none");
             Assert.That(value, Is.Null);
         }
 
-        [TestCaseSource(nameof(s_factories))]
-        public void Delete_NonExistentKey_Throws(Func<ILocalPrefs> factory)
+        public static async Task Delete_NonExistentKey_Throws(Func<ILocalPrefs> factory)
         {
             var prefs = factory();
-            Assert.That(async () => await prefs.DeleteAsync("notfound"), Throws.TypeOf<KeyNotFoundException>());
+            try
+            {
+                await prefs.DeleteAsync("notfound");
+            }
+            catch (KeyNotFoundException)
+            {
+                Assert.That(true);
+                return;
+            }
+            Assert.That(false);
         }
 
-        [TestCaseSource(nameof(s_factories))]
-        public async Task Delete_SecondElement(Func<ILocalPrefs> factory)
+        public static async Task Delete_SecondElement(Func<ILocalPrefs> factory)
         {
             var prefs = factory();
             await prefs.SaveAsync("a", 1);
@@ -237,8 +199,7 @@ namespace AndanteTribe.IO.Tests
             Assert.That(prefs.Load<int>("c"), Is.EqualTo(3));
         }
 
-        [TestCaseSource(nameof(s_factories))]
-        public async Task AddAndRemoveMultipleTimes(Func<ILocalPrefs> factory)
+        public static async Task AddAndRemoveMultipleTimes(Func<ILocalPrefs> factory)
         {
             var prefs = factory();
             for (int i = 0; i < 10; i++)
@@ -259,3 +220,6 @@ namespace AndanteTribe.IO.Tests
         }
     }
 }
+
+
+

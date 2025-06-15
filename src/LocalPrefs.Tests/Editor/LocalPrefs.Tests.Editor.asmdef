@@ -1,7 +1,10 @@
 {
-    "name": "LocalPrefs.Tests",
-    "rootNamespace": "AndanteTribe.IO",
-    "references": [],
+    "name": "LocalPrefs.Tests.Editor",
+    "rootNamespace": "AndanteTribe.IO.Tests",
+    "references": [
+        "LocalPrefs.Unity",
+        "LocalPrefs.Tests"
+    ],
     "includePlatforms": [
         "Editor"
     ],
@@ -11,7 +14,6 @@
     "precompiledReferences": [
         "nunit.framework.dll",
         "MessagePack.dll",
-        "MessagePack.Annotations.dll",
         "System.Text.Json.dll",
         "LocalPrefs.Core.dll",
         "LocalPrefs.Json.dll",
@@ -20,5 +22,5 @@
     "autoReferenced": false,
     "defineConstraints": [],
     "versionDefines": [],
-    "noEngineReferences": false
+    "noEngineReferences": true
 }

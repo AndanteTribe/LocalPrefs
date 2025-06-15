@@ -5,6 +5,7 @@
         <LangVersion>9</LangVersion>
         <IsPackable>false</IsPackable>
         <RootNamespace>AndanteTribe.IO.Tests</RootNamespace>
+        <DefineConstants>DOTNET_TEST</DefineConstants>
     </PropertyGroup>
 
     <ItemGroup>

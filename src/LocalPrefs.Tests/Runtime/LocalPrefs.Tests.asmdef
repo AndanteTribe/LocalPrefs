@@ -1,0 +1,25 @@
+{
+    "name": "LocalPrefs.Tests",
+    "rootNamespace": "AndanteTribe.IO.Tests",
+    "references": [
+        "GUID:e4cd858fa11fd074b8703cce42793f1a"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll",
+        "MessagePack.dll",
+        "MessagePack.Annotations.dll",
+        "System.Text.Json.dll",
+        "System.Text.Encodings.Web.dll",
+        "LocalPrefs.Core.dll",
+        "LocalPrefs.Json.dll",
+        "LocalPrefs.MessagePack.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

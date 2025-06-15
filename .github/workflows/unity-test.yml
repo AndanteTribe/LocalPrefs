@@ -20,6 +20,7 @@ jobs:
           with:
             fetch-depth: 0
         - uses: actions/cache@v4
+          id: cache
           with:
             path: |
               src/LocalPrefs.Unity/Library
@@ -29,15 +30,18 @@ jobs:
             restore-keys: |
               cache-
         - name: Free disk space
-          run:  |
+          run: |
             chmod +x ./.github/workflows/scripts/free_disk_space.sh
             .github/workflows/scripts/free_disk_space.sh
             git checkout -- ./.github/workflows/scripts/free_disk_space.sh
-        - uses: actions/setup-dotnet@v4
+        - if: steps.cache.outputs.cache-hit != 'true'
+          uses: actions/setup-dotnet@v4
           with:
             dotnet-version: 9.0.x
-        - run: dotnet tool install --global NuGetForUnity.Cli
-        - run: nugetforunity restore src/LocalPrefs.Unity
+        - if: steps.cache.outputs.cache-hit != 'true'
+          run: |
+            dotnet tool install --global NuGetForUnity.Cli
+            nugetforunity restore src/LocalPrefs.Unity
         - uses: game-ci/unity-test-runner@v4
           id: tests
           env:
