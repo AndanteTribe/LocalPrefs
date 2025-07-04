@@ -24,6 +24,9 @@
             <param name="iv">The initialization vector used for AES encryption.</param>
             <param name="mode">The cipher mode to use for AES encryption. Defaults to CBC.</param>
         </member>
+        <member name="P:AndanteTribe.IO.CryptoFileAccessor.SavePath">
+            <inheritdoc />
+        </member>
         <member name="M:AndanteTribe.IO.CryptoFileAccessor.#ctor(AndanteTribe.IO.FileAccessor,System.Byte[])">
             <summary>
             The underlying file accessor that performs actual file operations.
@@ -67,16 +70,8 @@
             Abstract class that provides access to the file system.
             Abstracts file read/write operations for local preferences.
             </summary>
-            <param name="savePath">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
         </member>
-        <member name="M:AndanteTribe.IO.FileAccessor.#ctor(System.String)">
-            <summary>
-            Abstract class that provides access to the file system.
-            Abstracts file read/write operations for local preferences.
-            </summary>
-            <param name="savePath">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
-        </member>
-        <member name="F:AndanteTribe.IO.FileAccessor.SavePath">
+        <member name="P:AndanteTribe.IO.FileAccessor.SavePath">
             <summary>
             The file path where preference data will be stored.
             </summary>
@@ -121,6 +116,9 @@
             Provides standard file system operations using <see cref="N:System.IO"/>.
             </summary>
             <param name="path">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
+        </member>
+        <member name="P:AndanteTribe.IO.FileAccessor.DefaultFileAccessor.SavePath">
+            <inheritdoc />
         </member>
         <member name="M:AndanteTribe.IO.FileAccessor.DefaultFileAccessor.ReadAllBytes">
             <inheritdoc />

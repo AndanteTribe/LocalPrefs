@@ -4,13 +4,12 @@
 /// Abstract class that provides access to the file system.
 /// Abstracts file read/write operations for local preferences.
 /// </summary>
-/// <param name="savePath">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
-public abstract class FileAccessor(string savePath)
+public abstract class FileAccessor
 {
     /// <summary>
     /// The file path where preference data will be stored.
     /// </summary>
-    protected internal readonly string SavePath = savePath;
+    protected internal abstract string SavePath { get; }
 
     /// <summary>
     /// Reads the entire file into a byte array.
@@ -44,8 +43,11 @@ public abstract class FileAccessor(string savePath)
     /// Provides standard file system operations using <see cref="System.IO"/>.
     /// </summary>
     /// <param name="path">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
-    private sealed class DefaultFileAccessor(in string path) : FileAccessor(path)
+    private sealed class DefaultFileAccessor(in string path) : FileAccessor
     {
+        /// <inheritdoc />
+        protected internal override string SavePath { get; } = path;
+
         /// <inheritdoc />
         public override byte[] ReadAllBytes() =>
             File.Exists(SavePath) ? File.ReadAllBytes(SavePath) : [];

@@ -10,8 +10,11 @@ namespace AndanteTribe.IO;
 /// <param name="key">The encryption key used for AES encryption.</param>
 /// <param name="iv">The initialization vector used for AES encryption.</param>
 /// <param name="mode">The cipher mode to use for AES encryption. Defaults to CBC.</param>
-public class CryptoFileAccessor(FileAccessor fileAccessor, byte[] key, byte[] iv, CipherMode mode = CipherMode.CBC) : FileAccessor(fileAccessor.SavePath)
+public class CryptoFileAccessor(FileAccessor fileAccessor, byte[] key, byte[] iv, CipherMode mode = CipherMode.CBC) : FileAccessor
 {
+    /// <inheritdoc />
+    protected internal override string SavePath => fileAccessor.SavePath;
+
     /// <summary>
     /// The underlying file accessor that performs actual file operations.
     /// </summary>

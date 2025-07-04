@@ -12,13 +12,14 @@ namespace AndanteTribe.IO.Unity
     /// </summary>
     public class LSAccessor : FileAccessor
     {
+        /// <inheritdoc />
+        protected internal override string SavePath { get; }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="LSAccessor"/> class with the specified path.
         /// </summary>
         /// <param name="path">The key to the Local Storage file.</param>
-        public LSAccessor(in string path) : base(path)
-        {
-        }
+        public LSAccessor(in string path) => SavePath = path;
 
         /// <inheritdoc />
         public override byte[] ReadAllBytes() => LSUtils.ReadAllBytes(SavePath);
