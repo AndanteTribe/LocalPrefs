@@ -8,7 +8,6 @@
 English | [日本語](README_JA.md)
 
 ## Overview
-
 **LocalPrefs** is a library that provides local save/load functionality for .NET and Unity.
 
 > [!CAUTION]
@@ -31,25 +30,19 @@ Unity’s built-in `UnityEngine.PlayerPrefs` API is known for several critical i
 4. By integrating with native JavaScript, it supports APIs for saving/loading using Local Storage and IndexedDB, along with unified implementations based on these.
 
 ## Installation
-
 ### NuGet Packages
-
 LocalPrefs requires .NET Standard 2.1 or higher. (Currently in preparation.)
 
 ### .NET CLI
-
 Coming soon.
 
 ### Package Manager
-
 Coming soon.
 
 ### Unity
-
 See the [Unity](#unity-1) section below for details.
 
 ## Quick Start
-
 The simplest implementation uses `LocalPrefs.Shared`.
 The types that can be saved/loaded depend on the serializer used. As long as the serializer’s requirements are met, any type can be handled.
 
@@ -98,14 +91,12 @@ ILocalPrefs msgpackPrefs = new MessagePackLocalPrefs(path);
 ```
 
 ## FileAccessor
-
 This is an abstraction layer for file I/O used in LocalPrefs.
 You can subclass `FileAccessor` to implement custom file-handling logic.
 
 The factory method `FileAccessor.Create(in string path)` provides a default implementation using `System.IO`.
 
 ## Encryption
-
 `CryptoFileAccessor` is a general-purpose implementation that enables encrypted saving and decrypted loading.
 It can be passed to a `JsonLocalPrefs` instance as shown below:
 
@@ -138,7 +129,6 @@ int value = prefs.Load<int>("intkey");
 ```
 
 ## System.Text.Json
-
 By using `LocalPrefs.Json`, you can perform local save/load operations based on `System.Text.Json`.
 The `JsonLocalPrefs` class implements `ILocalPrefs` and provides the following constructors:
 
@@ -149,7 +139,6 @@ public JsonLocalPrefs(FileAccessor fileAccessor, JsonSerializerOptions? options 
 ```
 
 ## MessagePack-CSharp
-
 By using `LocalPrefs.MessagePack`, you can perform local save/load operations based on [MessagePack-CSharp](https://github.com/MessagePack-CSharp/MessagePack-CSharp).
 The `MessagePackLocalPrefs` class implements `ILocalPrefs` and provides the following constructors:
 
@@ -164,44 +153,46 @@ public MessagePackLocalPrefs(FileAccessor fileAccessor, MessagePackSerializerOpt
 ```
 
 ## Unity
-
-**LocalPrefs** is compatible with Unity.
-An additional Unity-specific extension package called `LocalPrefs.Unity` is also available.
+LocalPrefs is available for use in Unity.
+A Unity-specific extension package, `LocalPrefs.Unity`, is also provided.
 
 ### Requirements
-
-* Unity 2022.3 or newer
+- Unity 2022.3 or later
 
 ### Installation
-
 1. Install [NuGetForUnity](https://github.com/GlitchEnzo/NuGetForUnity).
 2. Open `NuGet > Manage NuGet Packages` and install the `System.Text.Json` or `MessagePack-CSharp` package.
-3. Open `Window > Package Manager`, select `[+] > Add package from git URL`, and enter the following URLs:
-
-```
-# Core package
-https://github.com/AndanteTribe/LocalPrefs.git?path=bin/LocalPrefs.Core
-
-# For System.Text.Json
-https://github.com/AndanteTribe/LocalPrefs.git?path=bin/LocalPrefs.Json
-
-# For MessagePack-CSharp
-https://github.com/AndanteTribe/LocalPrefs.git?path=bin/LocalPrefs.MessagePack
-
-# Unity extension package
-https://github.com/AndanteTribe/LocalPrefs.git?path=src/LocalPrefs.Unity/Packages/jp.andantetribe.localprefs
-```
+3. If you use `MessagePack-CSharp`, also install the `MessagePack.Unity` package.
+   > Install `MessagePack.Unity` package by referencing the git URL. Open Package Manager window and press `Add Package from git URL...`, enter following path
+   >
+   > https://github.com/MessagePack-CSharp/MessagePack-CSharp.git?path=src/MessagePack.UnityClient/Assets/Scripts/MessagePack
+   > [MessagePack-CSharp README.md](https://github.com/MessagePack-CSharp/MessagePack-CSharp?tab=readme-ov-file#unity-support)
+4. Open `Window > Package Manager`, select `[+] > Add package from git URL`, and enter the following URLs:
+   > ### Core package
+   > ```
+   > https://github.com/AndanteTribe/LocalPrefs.git?path=bin/LocalPrefs.Core
+   > ```
+   > ### For System.Text.Json
+   > ```
+   > https://github.com/AndanteTribe/LocalPrefs.git?path=bin/LocalPrefs.Json
+   > ```
+   > ### For MessagePack-CSharp
+   > ```
+   > https://github.com/AndanteTribe/LocalPrefs.git?path=bin/LocalPrefs.MessagePack
+   > ```
+   > ### Unity extension package
+   > ```
+   > https://github.com/AndanteTribe/LocalPrefs.git?path=src/LocalPrefs.Unity/Packages/jp.andantetribe.localprefs
+   > ```
 
 > \[!CAUTION]
 > Once NuGet support for LocalPrefs is complete, these complicated installation steps are expected to be simplified.
 
 ### Auto Configuration of Save Path for LocalPrefs.Shared
-
 When `LocalPrefs.Unity` is included, `LocalPrefs.Shared` will automatically configure the save path at startup.
 By default, `Application.persistentDataPath` is used for non-web platforms, and Local Storage for web platforms.
 
 ### Web Support
-
 `LocalPrefs.Unity` supports browser-based local saving/loading via native JavaScript integration.
 
 Both **IndexedDB** and **Local Storage** are supported as storage backends.
@@ -213,7 +204,6 @@ If the data is small, Local Storage performs faster than IndexedDB. However, for
 For advanced usage, `IDBStream` and `LSStream` are also available, implementing the .NET stream decorator paradigm.
 
 #### IDBUtils
-
 ```csharp
 public static async ValueTask WriteAllBytesAsync(string path, byte[] bytes, CancellationToken cancellationToken = default);
 
@@ -225,7 +215,6 @@ public static async ValueTask<byte[]> ReadAllBytesAsync(string path, Cancellatio
 ```
 
 #### LSUtils
-
 ```csharp
 public static void WriteAllBytes(in string path, in ReadOnlySpan<byte> bytes);
 
@@ -238,6 +227,5 @@ public static byte[] ReadAllBytes(in string path);
 public static string ReadAllText(in string path);
 ```
 
-### License
-
+## License
 This library is released under the MIT license.

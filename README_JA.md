@@ -149,20 +149,31 @@ LocalPrefsはUnityで使用可能です。
 ### インストール
 1. [NugetForUnity](https://github.com/GlitchEnzo/NuGetForUnity)をインストールします。
 2.  `NuGet > Manage NuGet Packages` からNuGetウィンドウを開き、`System.Text.Json` または `MessagePack-CSharp` パッケージを検索してインストールします。
-3. `Window > Package Manager` からPackage Managerウィンドウを開き、`[+] > Add package from git URL` を選択して以下のURLを入力します。
-```
-# Coreパッケージ
-https://github.com/AndanteTribe/LocalPrefs.git?path=bin/LocalPrefs.Core
-
-# System.Text.Json利用時
-https://github.com/AndanteTribe/LocalPrefs.git?path=bin/LocalPrefs.Json
-
-# MessagePack-CSharp利用時
-https://github.com/AndanteTribe/LocalPrefs.git?path=bin/LocalPrefs.MessagePack
-
-# Unity用拡張パッケージ
-https://github.com/AndanteTribe/LocalPrefs.git?path=src/LocalPrefs.Unity/Packages/jp.andantetribe.localprefs
-```
+3. `MessagePack-CSharp` を利用する場合は、`MessagePack.Unity` パッケージもインストールします。
+   > Install `MessagePack.Unity` package by referencing the git URL. Open Package Manager window and press `Add Package from git URL...`, enter following path
+   >
+   > https://github.com/MessagePack-CSharp/MessagePack-CSharp.git?path=src/MessagePack.UnityClient/Assets/Scripts/MessagePack
+   > [MessagePack-CSharp README.md](https://github.com/MessagePack-CSharp/MessagePack-CSharp?tab=readme-ov-file#unity-support)
+4. `Window > Package Manager` からPackage Managerウィンドウを開き、`[+] > Add package from git URL` を選択して以下のURLを入力します。
+   > ### Coreパッケージ
+   > ```
+   > https://github.com/AndanteTribe/LocalPrefs.git?path=bin/LocalPrefs.Core
+   > ```
+   >
+   > ### System.Text.Json利用時
+   > ```
+   > https://github.com/AndanteTribe/LocalPrefs.git?path=bin/LocalPrefs.Json
+   > ```
+   >
+   > ### MessagePack-CSharp利用時
+   > ```
+   > https://github.com/AndanteTribe/LocalPrefs.git?path=bin/LocalPrefs.MessagePack
+   > ```
+   >
+   > ### Unity用拡張パッケージ
+   > ```
+   > https://github.com/AndanteTribe/LocalPrefs.git?path=src/LocalPrefs.Unity/Packages/jp.andantetribe.localprefs
+   > ```
 
 > [!CAUTION]
 > LocalPrefsのNuGet準備が完了すれば、上記の煩雑なインストール手順は改善される見込みです。
