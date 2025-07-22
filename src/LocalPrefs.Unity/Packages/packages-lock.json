@@ -58,6 +58,15 @@
       },
       "url": "https://packages.unity.com"
     },
+    "jp.andantetribe.debugtoolkit": {
+      "version": "https://github.com/AndanteTribe/DebugToolkit.git?path=Packages/jp.andantetribe.debugtoolkit",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.unity.modules.uielements": "1.0.0"
+      },
+      "hash": "fd513a77012a372ed6d3837da977faa4037aba28"
+    },
     "jp.andantetribe.localprefs": {
       "version": "file:jp.andantetribe.localprefs",
       "depth": 0,
