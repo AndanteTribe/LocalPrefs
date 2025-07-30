@@ -1,24 +1,21 @@
 name: unity-test
 on:
-  pull_request:
+  pull_request_target:
     types:
-      - opened
-      - synchronize
+      - labeled
   push:
     branches:
     - main
   workflow_dispatch: {}
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   test:
       runs-on: ubuntu-latest
+      if: ${{ github.event_name == 'pull_request_target' && github.event.label.name == 'request-ci' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
       steps:
         - uses: actions/checkout@v4
           with:
-            fetch-depth: 0
+            ref: ${{ github.event.pull_request.head.sha || github.sha }}
         - uses: actions/cache@v4
           id: cache
           with:
