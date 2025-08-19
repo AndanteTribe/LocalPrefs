@@ -1,0 +1,33 @@
+name: Publish Core to Nuget
+on:
+  workflow_dispatch: {}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - name: Restore
+        run: dotnet restore
+        working-directory: ./src/LocalPrefs
+      - name: Build
+        run: dotnet build -c Release --no-restore
+        working-directory: ./src/LocalPrefs
+      - name: Pack
+        run: dotnet pack -c Release -o artifacts/
+        working-directory: ./src/LocalPrefs
+      - name: Publish to Nuget
+        run: find . -type f -name "*.nupkg" -print0 | xargs -0 -I pkg dotnet nuget push pkg -k $nuget_api_key -s "https://api.nuget.org/v3/index.json" --skip-duplicate
+        env:
+          nuget_api_key: ${{ secrets.NUGET_API_KEY }}
+        working-directory: ./src/LocalPrefs/artifacts
+#      - uses: actions/upload-artifact@master
+#        with:
+#          path: ./src/LocalPrefs/artifacts
+#          retention-days: 2

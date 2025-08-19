@@ -1,6 +1,9 @@
 # LocalPrefs
 [![dotnet-test](https://github.com/AndanteTribe/LocalPrefs/actions/workflows/dotnet-test.yml/badge.svg)](https://github.com/AndanteTribe/LocalPrefs/actions/workflows/dotnet-test.yml)
 [![unity-test](https://github.com/AndanteTribe/LocalPrefs/actions/workflows/unity-test.yml/badge.svg)](https://github.com/AndanteTribe/LocalPrefs/actions/workflows/unity-test.yml)
+[![nuget-core](https://img.shields.io/nuget/v/LocalPrefs.Core.svg)](https://www.nuget.org/packages/LocalPrefs.Core/)
+[![nuget-json](https://img.shields.io/nuget/v/LocalPrefs.Json.svg)](https://www.nuget.org/packages/LocalPrefs.Json/)
+[![nuget-msgpack](https://img.shields.io/nuget/v/LocalPrefs.MessagePack.svg)](https://www.nuget.org/packages/LocalPrefs.MessagePack/)
 [![Releases](https://img.shields.io/github/release/AndanteTribe/LocalPrefs.svg)](https://github.com/AndanteTribe/LocalPrefs/releases)
 [![GitHub license](https://img.shields.io/github/license/AndanteTribe/LocalPrefs.svg)](./LICENSE)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/AndanteTribe/LocalPrefs)
@@ -9,10 +12,6 @@ English | [日本語](README_JA.md)
 
 ## Overview
 **LocalPrefs** is a library that provides local save/load functionality for .NET and Unity.
-
-> [!CAUTION]
-> This library is currently provided as a preview version.
-> The installation procedure is not well developed.
 
 Unity’s built-in `UnityEngine.PlayerPrefs` API is known for several critical issues, including:
 
@@ -31,13 +30,29 @@ Unity’s built-in `UnityEngine.PlayerPrefs` API is known for several critical i
 
 ## Installation
 ### NuGet Packages
-LocalPrefs requires .NET Standard 2.1 or higher. (Currently in preparation.)
+LocalPrefs requires .NET Standard 2.1 or higher. The package can be obtained from NuGet.
 
 ### .NET CLI
-Coming soon.
+#### LocalPrefs.Json (uses System.Text.Json)
+```ps1
+dotnet add package LocalPrefs.Json
+```
+
+#### LocalPrefs.MessagePack (uses MessagePack-CSharp)
+```ps1
+dotnet add package LocalPrefs.MessagePack
+```
 
 ### Package Manager
-Coming soon.
+#### LocalPrefs.Json (uses System.Text.Json)
+```ps1
+Install-Package LocalPrefs.Json
+```
+
+#### LocalPrefs.MessagePack (uses MessagePack-CSharp)
+```ps1
+Install-Package LocalPrefs.MessagePack
+```
 
 ### Unity
 See the [Unity](#unity-1) section below for details.
@@ -161,32 +176,16 @@ A Unity-specific extension package, `LocalPrefs.Unity`, is also provided.
 
 ### Installation
 1. Install [NuGetForUnity](https://github.com/GlitchEnzo/NuGetForUnity).
-2. Open `NuGet > Manage NuGet Packages` and install the `System.Text.Json` or `MessagePack-CSharp` package.
-3. If you use `MessagePack-CSharp`, also install the `MessagePack.Unity` package.
+2. Open `NuGet > Manage NuGet Packages` and search for and install the `LocalPrefs.Json` or `LocalPrefs.MessagePack` package.
+3. If you use `LocalPrefs.MessagePack` (depends on `MessagePack-CSharp`), also install the `MessagePack.Unity` package.
    > Install `MessagePack.Unity` package by referencing the git URL. Open Package Manager window and press `Add Package from git URL...`, enter following path
    >
    > https://github.com/MessagePack-CSharp/MessagePack-CSharp.git?path=src/MessagePack.UnityClient/Assets/Scripts/MessagePack
    > [MessagePack-CSharp README.md](https://github.com/MessagePack-CSharp/MessagePack-CSharp?tab=readme-ov-file#unity-support)
-4. Open `Window > Package Manager`, select `[+] > Add package from git URL`, and enter the following URLs:
-   > ### Core package
-   > ```
-   > https://github.com/AndanteTribe/LocalPrefs.git?path=bin/LocalPrefs.Core
-   > ```
-   > ### For System.Text.Json
-   > ```
-   > https://github.com/AndanteTribe/LocalPrefs.git?path=bin/LocalPrefs.Json
-   > ```
-   > ### For MessagePack-CSharp
-   > ```
-   > https://github.com/AndanteTribe/LocalPrefs.git?path=bin/LocalPrefs.MessagePack
-   > ```
-   > ### Unity extension package
-   > ```
-   > https://github.com/AndanteTribe/LocalPrefs.git?path=src/LocalPrefs.Unity/Packages/jp.andantetribe.localprefs
-   > ```
-
-> \[!CAUTION]
-> Once NuGet support for LocalPrefs is complete, these complicated installation steps are expected to be simplified.
+4. Open `Window > Package Manager`, select `[+] > Add package from git URL`, and enter the following URL:
+    ```
+   https://github.com/AndanteTribe/LocalPrefs.git?path=src/LocalPrefs.Unity/Packages/jp.andantetribe.localprefs
+    ```
 
 ### Auto Configuration of Save Path for LocalPrefs.Shared
 When `LocalPrefs.Unity` is included, `LocalPrefs.Shared` will automatically configure the save path at startup.

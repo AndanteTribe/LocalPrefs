@@ -1,6 +1,9 @@
 # LocalPrefs
 [![dotnet-test](https://github.com/AndanteTribe/LocalPrefs/actions/workflows/dotnet-test.yml/badge.svg)](https://github.com/AndanteTribe/LocalPrefs/actions/workflows/dotnet-test.yml)
 [![unity-test](https://github.com/AndanteTribe/LocalPrefs/actions/workflows/unity-test.yml/badge.svg)](https://github.com/AndanteTribe/LocalPrefs/actions/workflows/unity-test.yml)
+[![nuget-core](https://img.shields.io/nuget/v/LocalPrefs.Core.svg)](https://www.nuget.org/packages/LocalPrefs.Core/)
+[![nuget-json](https://img.shields.io/nuget/v/LocalPrefs.Json.svg)](https://www.nuget.org/packages/LocalPrefs.Json/)
+[![nuget-msgpack](https://img.shields.io/nuget/v/LocalPrefs.MessagePack.svg)](https://www.nuget.org/packages/LocalPrefs.MessagePack/)
 [![Releases](https://img.shields.io/github/release/AndanteTribe/LocalPrefs.svg)](https://github.com/AndanteTribe/LocalPrefs/releases)
 [![GitHub license](https://img.shields.io/github/license/AndanteTribe/LocalPrefs.svg)](./LICENSE)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/AndanteTribe/LocalPrefs)
@@ -9,10 +12,6 @@
 
 ## 概要
 **LocalPrefs** は .NET / Unity向けにローカルセーブ・ロードの機能を提供するライブラリです。
-
-> [!CAUTION]
-> このライブラリは現在プレビュー版として提供されています。
-> 導入手順があまり整備されていません。
 
 Unityの `UnityEngine.PlayerPrefs` は非常に問題の多いAPIで、以下のような欠点があります。
 
@@ -30,11 +29,29 @@ LocalPrefsはこれらの問題を解消し、かつ高速な実装を提供し�
 4. JavaScriptネイティブな実装との連携により、Local storageとIndexedDBへの保存・展開を可能とするAPIの提供、およびそれらを利用した一括制御実装を提供します。
 ## インストール
 ### NuGet packages
-LocalPrefsを利用するには .NET Standard2.1 以上が必要です。ただしこちらは準備中です。
+LocalPrefsを利用するには .NET Standard2.1 以上が必要です。パッケージはNuGetから入手できます。
 ### .NET CLI
-準備中です。
+#### LocalPrefs.Json(System.Text.Json利用)
+```ps1
+dotnet add package LocalPrefs.Json
+```
+
+#### LocalPrefs.MessagePack(MessagePack-CSharp利用)
+```ps1
+dotnet add package LocalPrefs.MessagePack
+```
+
 ### Package Manager
-準備中です。
+#### LocalPrefs.Json(System.Text.Json利用)
+```ps1
+Install-Package LocalPrefs.Json
+```
+
+#### LocalPrefs.MessagePack(MessagePack-CSharp利用)
+```ps1
+Install-Package LocalPrefs.MessagePack
+```
+
 ### Unity
 詳細は[Unity](#unity-1)の項目を参照してください。
 ## クイックスタート
@@ -148,35 +165,17 @@ LocalPrefsはUnityで使用可能です。
 - Unity 2022.3以上
 ### インストール
 1. [NugetForUnity](https://github.com/GlitchEnzo/NuGetForUnity)をインストールします。
-2.  `NuGet > Manage NuGet Packages` からNuGetウィンドウを開き、`System.Text.Json` または `MessagePack-CSharp` パッケージを検索してインストールします。
-3. `MessagePack-CSharp` を利用する場合は、`MessagePack.Unity` パッケージもインストールします。
+2.  `NuGet > Manage NuGet Packages` からNuGetウィンドウを開き、`LocalPrefs.Json` または `LocalPrefs.MessagePack` パッケージを検索してインストールします。
+3. `LocalPrefs.MessagePack`(`MessagePack-CSharp`依存) を利用する場合は、`MessagePack.Unity` パッケージもインストールします。
    > Install `MessagePack.Unity` package by referencing the git URL. Open Package Manager window and press `Add Package from git URL...`, enter following path
    >
    > https://github.com/MessagePack-CSharp/MessagePack-CSharp.git?path=src/MessagePack.UnityClient/Assets/Scripts/MessagePack
    > [MessagePack-CSharp README.md](https://github.com/MessagePack-CSharp/MessagePack-CSharp?tab=readme-ov-file#unity-support)
 4. `Window > Package Manager` からPackage Managerウィンドウを開き、`[+] > Add package from git URL` を選択して以下のURLを入力します。
-   > ### Coreパッケージ
-   > ```
-   > https://github.com/AndanteTribe/LocalPrefs.git?path=bin/LocalPrefs.Core
-   > ```
-   >
-   > ### System.Text.Json利用時
-   > ```
-   > https://github.com/AndanteTribe/LocalPrefs.git?path=bin/LocalPrefs.Json
-   > ```
-   >
-   > ### MessagePack-CSharp利用時
-   > ```
-   > https://github.com/AndanteTribe/LocalPrefs.git?path=bin/LocalPrefs.MessagePack
-   > ```
-   >
-   > ### Unity用拡張パッケージ
-   > ```
-   > https://github.com/AndanteTribe/LocalPrefs.git?path=src/LocalPrefs.Unity/Packages/jp.andantetribe.localprefs
-   > ```
+    ```
+   https://github.com/AndanteTribe/LocalPrefs.git?path=src/LocalPrefs.Unity/Packages/jp.andantetribe.localprefs
+    ```
 
-> [!CAUTION]
-> LocalPrefsのNuGet準備が完了すれば、上記の煩雑なインストール手順は改善される見込みです。
 ### LocalPrefs.Sharedの保存先の自動設定
 `LocalPrefs.Unity` を導入した場合、`LocalPrefs.Shared` はデフォルトで起動時に自動的に保存先を適切なものに設定されます。
 具体的には、Web以外であれば `Application.persistentDataPath`、WebではLocal storageになります。
