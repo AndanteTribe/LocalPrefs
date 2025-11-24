@@ -34,7 +34,7 @@ namespace AndanteTribe.IO.Unity
             await using var _ = cancellationToken.RegisterWithoutCaptureExecutionContext(() => CancelEventInternal(eventID));
 
             s_ids.Add(eventID);
-            SaveToIndexedDB((uint)eventID, path, bytes, bytes.Length, NonLoadSuccessCallback, ErrorCallback);
+            SaveToIndexedDB((uint)eventID, path, bytes, bytes.Length, static u => NonLoadSuccessCallback(u), static (u, s) => ErrorCallback(u, s));
 
             await new ValueTask(source, source.Version);
         }
@@ -61,7 +61,7 @@ namespace AndanteTribe.IO.Unity
             {
                 fixed (byte* dataPtr = bytes.Span)
                 {
-                    SaveToIndexedDB((uint)eventID, path, new IntPtr(dataPtr), bytes.Length, NonLoadSuccessCallback, ErrorCallback);
+                    SaveToIndexedDB((uint)eventID, path, new IntPtr(dataPtr), bytes.Length, static u => NonLoadSuccessCallback(u), static (u, s) => ErrorCallback(u, s));
                 }
             }
 
@@ -83,7 +83,7 @@ namespace AndanteTribe.IO.Unity
             await using var _ = cancellationToken.RegisterWithoutCaptureExecutionContext(() => CancelEventInternal(eventID));
 
             s_ids.Add(eventID);
-            DeleteFromIndexedDB((uint)eventID, path, NonLoadSuccessCallback, ErrorCallback);
+            DeleteFromIndexedDB((uint)eventID, path, static u => NonLoadSuccessCallback(u), static (u, s) => ErrorCallback(u, s));
 
             await new ValueTask(source, source.Version);
         }
@@ -109,7 +109,7 @@ namespace AndanteTribe.IO.Unity
         internal static void ReadAllBytesInternal(in string key, in EventID eventID)
         {
             s_ids.Add(eventID);
-            LoadFromIndexedDB((uint)eventID, key, LoadSuccessCallback, ErrorCallback);
+            LoadFromIndexedDB((uint)eventID, key, static (u, ptr, i) => LoadSuccessCallback(u, ptr, i), static (u, s) => ErrorCallback(u, s));
         }
 
         internal static void CancelEventInternal(in EventID eventID)
