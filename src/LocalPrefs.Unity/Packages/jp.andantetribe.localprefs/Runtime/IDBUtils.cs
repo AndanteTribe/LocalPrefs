@@ -28,7 +28,7 @@ namespace AndanteTribe.IO.Unity
         public static async ValueTask WriteAllBytesAsync(string path, byte[] bytes, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var source = IDBValueTaskSourcePool.Shared.Get();
+            var source = IDBValueTaskSource.Create();
             var eventID = EventID.GetNext(source);
 
             await using var _ = cancellationToken.RegisterWithoutCaptureExecutionContext(() => CancelEventInternal(eventID));
@@ -50,7 +50,7 @@ namespace AndanteTribe.IO.Unity
         public static async ValueTask WriteAllBytesAsync(string path, ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var source = IDBValueTaskSourcePool.Shared.Get();
+            var source = IDBValueTaskSource.Create();
             var eventID = EventID.GetNext(source);
 
             await using var _ = cancellationToken.RegisterWithoutCaptureExecutionContext(() => CancelEventInternal(eventID));
@@ -77,7 +77,7 @@ namespace AndanteTribe.IO.Unity
         public static async ValueTask DeleteAsync(string path, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var source = IDBValueTaskSourcePool.Shared.Get();
+            var source = IDBValueTaskSource.Create();
             var eventID = EventID.GetNext(source);
 
             await using var _ = cancellationToken.RegisterWithoutCaptureExecutionContext(() => CancelEventInternal(eventID));
@@ -97,7 +97,7 @@ namespace AndanteTribe.IO.Unity
         public static async ValueTask<byte[]> ReadAllBytesAsync(string path, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var source = IDBValueTaskSourcePool.Shared.Get();
+            var source = IDBValueTaskSource.Create();
             var eventID = EventID.GetNext(source);
 
             await using var _ = cancellationToken.RegisterWithoutCaptureExecutionContext(() => CancelEventInternal(eventID));
