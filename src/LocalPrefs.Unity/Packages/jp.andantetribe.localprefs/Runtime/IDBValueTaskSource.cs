@@ -3,29 +3,46 @@
 
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Sources;
-using UnityEngine.Pool;
 
 namespace AndanteTribe.IO.Unity
 {
-    internal sealed class IDBValueTaskSourcePool : ObjectPool<IDBValueTaskSource>
-    {
-        public static readonly IDBValueTaskSourcePool Shared = new();
-
-        private IDBValueTaskSourcePool() : base(static () => new IDBValueTaskSource(), static x => x.Reset())
-        {
-        }
-    }
-
     internal sealed class IDBValueTaskSource : IValueTaskSource<(byte[], int)>, IValueTaskSource
     {
+        private static IDBValueTaskSource? s_head;
+        private IDBValueTaskSource? _next;
+
         private ManualResetValueTaskSourceCore<(byte[], int)> _core = new()
         {
             RunContinuationsAsynchronously = false
         };
+        private GCHandle _handle;
 
+        public IntPtr Handle => GCHandle.ToIntPtr(_handle);
         public Memory<byte> Buffer { get; set; }
+
+        private IDBValueTaskSource()
+        {
+        }
+
+        public static IDBValueTaskSource Create()
+        {
+            var instance = s_head;
+            if (instance != null)
+            {
+                s_head = instance._next;
+                instance._next = null;
+            }
+            else
+            {
+                instance = new IDBValueTaskSource();
+            }
+
+            instance._handle = GCHandle.Alloc(instance);
+            return instance;
+        }
 
         public void SetResult() => _core.SetResult((Array.Empty<byte>(), 0));
 
@@ -48,12 +65,6 @@ namespace AndanteTribe.IO.Unity
 
         public void SetCanceled() => _core.SetException(new TaskCanceledException());
 
-        public void Reset()
-        {
-            _core.Reset();
-            Buffer = default;
-        }
-
         public short Version => _core.Version;
 
         [DebuggerNonUserCode]
@@ -65,7 +76,7 @@ namespace AndanteTribe.IO.Unity
             }
             finally
             {
-                IDBValueTaskSourcePool.Shared.Release(this);
+                Reset();
             }
         }
 
@@ -77,7 +88,7 @@ namespace AndanteTribe.IO.Unity
             }
             finally
             {
-                IDBValueTaskSourcePool.Shared.Release(this);
+                Reset();
             }
         }
 
@@ -85,6 +96,15 @@ namespace AndanteTribe.IO.Unity
 
         public void OnCompleted(Action<object?> continuation, object? state, short token, ValueTaskSourceOnCompletedFlags flags)
             => _core.OnCompleted(continuation, state, token, flags);
+
+        private void Reset()
+        {
+            _core.Reset();
+            Buffer = default;
+            _next = s_head;
+            s_head = this;
+            _handle.Free();
+        }
     }
 }
 

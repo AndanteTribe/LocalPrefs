@@ -61,13 +61,14 @@ namespace AndanteTribe.IO.Unity
         public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var source = IDBValueTaskSourcePool.Shared.Get();
+            var source = IDBValueTaskSource.Create();
             source.Buffer = buffer;
-            var eventID = EventID.GetNext(source);
+            await using var _ = cancellationToken.RegisterWithoutCaptureExecutionContext(static s =>
+            {
+                ((IDBValueTaskSource)s).SetCanceled();
+            }, source);
 
-            await using var _ = cancellationToken.RegisterWithoutCaptureExecutionContext(() => IDBUtils.CancelEventInternal(eventID));
-
-            IDBUtils.ReadAllBytesInternal(_path, EventID.GetNext(source));
+            IDBUtils.LoadFromIndexedDB(source.Handle, _path, IDBUtils.LoadSuccessCallback, IDBUtils.ErrorCallback);
             return (await new ValueTask<(byte[] _, int size)>(source, source.Version)).size;
         }
 
