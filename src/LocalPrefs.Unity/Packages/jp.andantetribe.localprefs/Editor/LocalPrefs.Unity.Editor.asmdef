@@ -1,0 +1,28 @@
+{
+    "name": "LocalPrefs.Unity.Editor",
+    "rootNamespace": "AndanteTribe.IO.Unity.Editor",
+    "references": [
+        "GUID:e4cd858fa11fd074b8703cce42793f1a"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "LocalPrefs.Core.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "ENABLE_UITOOLKIT"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.modules.uielements",
+            "expression": "",
+            "define": "ENABLE_UITOOLKIT"
+        }
+    ],
+    "noEngineReferences": false
+}
