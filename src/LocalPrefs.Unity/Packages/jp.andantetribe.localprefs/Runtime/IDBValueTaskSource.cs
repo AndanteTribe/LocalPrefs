@@ -12,19 +12,16 @@ namespace AndanteTribe.IO.Unity
     internal sealed class IDBValueTaskSource : IValueTaskSource<(byte[], int)>, IValueTaskSource
     {
         private static IDBValueTaskSource? s_head;
+        private IDBValueTaskSource? _next;
 
         private ManualResetValueTaskSourceCore<(byte[], int)> _core = new()
         {
             RunContinuationsAsynchronously = false
         };
-
         private GCHandle _handle;
 
         public IntPtr Handle => GCHandle.ToIntPtr(_handle);
-
         public Memory<byte> Buffer { get; set; }
-
-        private IDBValueTaskSource? _next;
 
         private IDBValueTaskSource()
         {
