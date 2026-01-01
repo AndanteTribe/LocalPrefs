@@ -15,8 +15,6 @@ namespace AndanteTribe.IO.Unity
     /// </summary>
     public static class IDBUtils
     {
-        private static readonly List<EventID> s_ids = new();
-
         /// <summary>
         /// Asynchronously writes the specified byte array to IndexedDB using the specified path as key.
         /// If the path already exists in IndexedDB, it is overwritten.
@@ -29,13 +27,12 @@ namespace AndanteTribe.IO.Unity
         {
             cancellationToken.ThrowIfCancellationRequested();
             var source = IDBValueTaskSource.Create();
-            var eventID = EventID.GetNext(source);
+            await using var _ = cancellationToken.RegisterWithoutCaptureExecutionContext(static s =>
+            {
+                ((IDBValueTaskSource)s).SetCanceled();
+            }, source);
 
-            await using var _ = cancellationToken.RegisterWithoutCaptureExecutionContext(() => CancelEventInternal(eventID));
-
-            s_ids.Add(eventID);
-            SaveToIndexedDB((uint)eventID, path, bytes, bytes.Length, NonLoadSuccessCallback, ErrorCallback);
-
+            SaveToIndexedDB(source.Handle, path, bytes, bytes.Length, NonLoadSuccessCallback, ErrorCallback);
             await new ValueTask(source, source.Version);
         }
 
@@ -51,17 +48,16 @@ namespace AndanteTribe.IO.Unity
         {
             cancellationToken.ThrowIfCancellationRequested();
             var source = IDBValueTaskSource.Create();
-            var eventID = EventID.GetNext(source);
-
-            await using var _ = cancellationToken.RegisterWithoutCaptureExecutionContext(() => CancelEventInternal(eventID));
-
-            s_ids.Add(eventID);
+            await using var _ = cancellationToken.RegisterWithoutCaptureExecutionContext(static s =>
+            {
+                ((IDBValueTaskSource)s).SetCanceled();
+            }, source);
 
             unsafe
             {
                 fixed (byte* dataPtr = bytes.Span)
                 {
-                    SaveToIndexedDB((uint)eventID, path, new IntPtr(dataPtr), bytes.Length, NonLoadSuccessCallback, ErrorCallback);
+                    SaveToIndexedDB(source.Handle, path, new IntPtr(dataPtr), bytes.Length, NonLoadSuccessCallback, ErrorCallback);
                 }
             }
 
@@ -78,13 +74,12 @@ namespace AndanteTribe.IO.Unity
         {
             cancellationToken.ThrowIfCancellationRequested();
             var source = IDBValueTaskSource.Create();
-            var eventID = EventID.GetNext(source);
+            await using var _ = cancellationToken.RegisterWithoutCaptureExecutionContext(static s =>
+            {
+                ((IDBValueTaskSource)s).SetCanceled();
+            }, source);
 
-            await using var _ = cancellationToken.RegisterWithoutCaptureExecutionContext(() => CancelEventInternal(eventID));
-
-            s_ids.Add(eventID);
-            DeleteFromIndexedDB((uint)eventID, path, NonLoadSuccessCallback, ErrorCallback);
-
+            DeleteFromIndexedDB(source.Handle, path, NonLoadSuccessCallback, ErrorCallback);
             await new ValueTask(source, source.Version);
         }
 
@@ -98,60 +93,49 @@ namespace AndanteTribe.IO.Unity
         {
             cancellationToken.ThrowIfCancellationRequested();
             var source = IDBValueTaskSource.Create();
-            var eventID = EventID.GetNext(source);
+            await using var _ = cancellationToken.RegisterWithoutCaptureExecutionContext(static s =>
+            {
+                ((IDBValueTaskSource)s).SetCanceled();
+            }, source);
 
-            await using var _ = cancellationToken.RegisterWithoutCaptureExecutionContext(() => CancelEventInternal(eventID));
-
-            ReadAllBytesInternal(path, EventID.GetNext(source));
+            LoadFromIndexedDB(source.Handle, path, LoadSuccessCallback, ErrorCallback);
             return (await new ValueTask<(byte[] array, int _)>(source, source.Version)).array;
         }
 
-        internal static void ReadAllBytesInternal(in string key, in EventID eventID)
-        {
-            s_ids.Add(eventID);
-            LoadFromIndexedDB((uint)eventID, key, LoadSuccessCallback, ErrorCallback);
-        }
-
-        internal static void CancelEventInternal(in EventID eventID)
-        {
-            eventID.Source.SetCanceled();
-            s_ids.Remove(eventID);
-        }
+        [DllImport("__Internal")]
+        private static extern void SaveToIndexedDB(IntPtr state, string key, byte[] data, int dataSize, Action<IntPtr> success, Action<IntPtr, string> error);
 
         [DllImport("__Internal")]
-        private static extern void SaveToIndexedDB(uint id, string key, byte[] data, int dataSize, Action<uint> success, Action<uint, string> error);
+        private static extern void SaveToIndexedDB(IntPtr state, string key, IntPtr data, int dataSize, Action<IntPtr> success, Action<IntPtr, string> error);
 
         [DllImport("__Internal")]
-        private static extern void SaveToIndexedDB(uint id, string key, IntPtr data, int dataSize, Action<uint> success, Action<uint, string> error);
+        private static extern void DeleteFromIndexedDB(IntPtr state, string key, Action<IntPtr> success, Action<IntPtr, string> error);
 
         [DllImport("__Internal")]
-        private static extern void DeleteFromIndexedDB(uint id, string key, Action<uint> success, Action<uint, string> error);
+        internal static extern void LoadFromIndexedDB(IntPtr state, string key, Action<IntPtr, IntPtr, int> success, Action<IntPtr, string> error);
 
-        [DllImport("__Internal")]
-        private static extern void LoadFromIndexedDB(uint id, string key, Action<uint, IntPtr, int> success, Action<uint, string> error);
-
-        [MonoPInvokeCallback(typeof(Action<uint>))]
-        private static void NonLoadSuccessCallback(uint id)
+        [MonoPInvokeCallback(typeof(Action<IntPtr>))]
+        private static void NonLoadSuccessCallback(IntPtr state)
         {
-            var eventID = s_ids[s_ids.BinarySearch((EventID)id)];
-            eventID.Source.SetResult();
-            s_ids.Remove(eventID);
+            var handle = GCHandle.FromIntPtr(state);
+            var source = (IDBValueTaskSource)handle.Target;
+            source.SetResult();
         }
 
-        [MonoPInvokeCallback(typeof(Action<uint, IntPtr, int>))]
-        private static void LoadSuccessCallback(uint id, IntPtr dataPtr, int length)
+        [MonoPInvokeCallback(typeof(Action<IntPtr, IntPtr, int>))]
+        internal static void LoadSuccessCallback(IntPtr state, IntPtr dataPtr, int length)
         {
-            var eventID = s_ids[s_ids.BinarySearch((EventID)id)];
-            eventID.Source.SetResult(dataPtr, length);
-            s_ids.Remove(eventID);
+            var handle = GCHandle.FromIntPtr(state);
+            var source = (IDBValueTaskSource)handle.Target;
+            source.SetResult(dataPtr, length);
         }
 
-        [MonoPInvokeCallback(typeof(Action<uint, string>))]
-        private static void ErrorCallback(uint id, string message)
+        [MonoPInvokeCallback(typeof(Action<IntPtr, string>))]
+        internal static void ErrorCallback(IntPtr state, string message)
         {
-            var eventID = s_ids[s_ids.BinarySearch((EventID)id)];
-            eventID.Source.SetException(new Exception(message));
-            s_ids.Remove(eventID);
+            var handle = GCHandle.FromIntPtr(state);
+            var source = (IDBValueTaskSource)handle.Target;
+            source.SetException(new Exception(message));
         }
     }
 }

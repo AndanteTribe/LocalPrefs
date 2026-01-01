@@ -3,6 +3,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Sources;
 
@@ -17,6 +18,10 @@ namespace AndanteTribe.IO.Unity
             RunContinuationsAsynchronously = false
         };
 
+        private GCHandle _handle;
+
+        public IntPtr Handle => GCHandle.ToIntPtr(_handle);
+
         public Memory<byte> Buffer { get; set; }
 
         private IDBValueTaskSource? _next;
@@ -27,14 +32,19 @@ namespace AndanteTribe.IO.Unity
 
         public static IDBValueTaskSource Create()
         {
-            if (s_head != null)
+            var instance = s_head;
+            if (instance != null)
             {
-                var instance = s_head;
                 s_head = instance._next;
                 instance._next = null;
-                return instance;
             }
-            return new IDBValueTaskSource();
+            else
+            {
+                instance = new IDBValueTaskSource();
+            }
+
+            instance._handle = GCHandle.Alloc(instance);
+            return instance;
         }
 
         public void SetResult() => _core.SetResult((Array.Empty<byte>(), 0));
@@ -96,6 +106,7 @@ namespace AndanteTribe.IO.Unity
             Buffer = default;
             _next = s_head;
             s_head = this;
+            _handle.Free();
         }
     }
 }

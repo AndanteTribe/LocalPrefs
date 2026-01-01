@@ -2,7 +2,7 @@ const plugin = {
 
     $Config: { DB_NAME : "/localprefs", STORE_NAME : "MAIN", DEBUG_STORE_NAME : "DEBUG" },
 
-    SaveToIndexedDB: function (id, keyStr, dataPtr, dataSize, success, error) {
+    SaveToIndexedDB: function (statePtr, keyStr, dataPtr, dataSize, success, error) {
         const key = UTF8ToString(keyStr);
         const data = new Uint8Array(dataSize);
         for (let i = 0; i < dataSize; i++) {
@@ -24,13 +24,13 @@ const plugin = {
             store.put(data, key);
 
             transaction.oncomplete = function () {
-                {{{ makeDynCall('vi', 'success') }}} (id);
+                {{{ makeDynCall('vi', 'success') }}} (statePtr);
                 db.close();
             };
 
             transaction.onerror = function (event) {
                 const buffer = stringToNewUTF8(event.target.error.message);
-                {{{ makeDynCall('vii', 'error') }}} (id, buffer);
+                {{{ makeDynCall('vii', 'error') }}} (statePtr, buffer);
                 _free(buffer);
                 db.close();
             };
@@ -38,12 +38,12 @@ const plugin = {
 
         request.onerror = function (event) {
             const buffer = stringToNewUTF8(event.target.error.message);
-            {{{ makeDynCall('vii', 'error') }}} (id, buffer);
+            {{{ makeDynCall('vii', 'error') }}} (statePtr, buffer);
             _free(buffer);
         };
     },
 
-    DeleteFromIndexedDB: function(id, keyStr, success, error) {
+    DeleteFromIndexedDB: function(statePtr, keyStr, success, error) {
         const key = UTF8ToString(keyStr);
 
         const request = indexedDB.open(Config.DB_NAME, 1);
@@ -61,13 +61,13 @@ const plugin = {
             store.delete(key);
 
             transaction.oncomplete = function () {
-                {{{ makeDynCall('vi', 'success') }}} (id);
+                {{{ makeDynCall('vi', 'success') }}} (statePtr);
                 db.close();
             };
 
             transaction.onerror = function (event) {
                 const buffer = stringToNewUTF8(event.target.error.message);
-                {{{ makeDynCall('vii', 'error') }}} (id, buffer);
+                {{{ makeDynCall('vii', 'error') }}} (statePtr, buffer);
                 _free(buffer);
                 db.close();
             };
@@ -75,12 +75,12 @@ const plugin = {
 
         request.onerror = function (event) {
             const buffer = stringToNewUTF8(event.target.error.message);
-            {{{ makeDynCall('vii', 'error') }}} (id, buffer);
+            {{{ makeDynCall('vii', 'error') }}} (statePtr, buffer);
             _free(buffer);
         };
     },
 
-    LoadFromIndexedDB: function (id, keyStr, success, error) {
+    LoadFromIndexedDB: function (statePtr, keyStr, success, error) {
         const key = UTF8ToString(keyStr);
 
         const request = indexedDB.open(Config.DB_NAME, 1);
@@ -103,11 +103,11 @@ const plugin = {
                     const length = result.length;
                     const data = _malloc(length);
                     HEAPU8.set(result, data);
-                    {{{ makeDynCall('viii', 'success') }}} (id, data, length);
+                    {{{ makeDynCall('viii', 'success') }}} (statePtr, data, length);
                     _free(data);
                 } else {
                     const buffer = stringToNewUTF8("Key not found");
-                    {{{ makeDynCall('vii', 'error') }}} (id, buffer);
+                    {{{ makeDynCall('vii', 'error') }}} (statePtr, buffer);
                     _free(buffer);
                 }
                 db.close();
@@ -115,7 +115,7 @@ const plugin = {
 
             getRequest.onerror = function (event) {
                 const buffer = stringToNewUTF8(event.target.error.message);
-                {{{ makeDynCall('vii', 'error') }}} (id, buffer);
+                {{{ makeDynCall('vii', 'error') }}} (statePtr, buffer);
                 _free(buffer);
                 db.close();
             };
@@ -123,7 +123,7 @@ const plugin = {
 
         request.onerror = function (event) {
             const buffer = stringToNewUTF8(event.target.error.message);
-            {{{ makeDynCall('vii', 'error') }}} (id, buffer);
+            {{{ makeDynCall('vii', 'error') }}} (statePtr, buffer);
             _free(buffer);
         };
     },
