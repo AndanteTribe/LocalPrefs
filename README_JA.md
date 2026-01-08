@@ -129,13 +129,16 @@ byte[] iv = {
 };
 
 // Create AES crypto transforms
-var aes = Aes.Create();
+using var aes = Aes.Create();
 aes.Key = key;
 aes.IV = iv;
 aes.Mode = CipherMode.CBC;
 
+var encryptor = aes.CreateEncryptor();
+var decryptor = aes.CreateDecryptor();
+
 // Set CryptoFileAccessor with ICryptoTransform
-ILocalPrefs prefs = new JsonLocalPrefs(new CryptoFileAccessor(path, aes.CreateEncryptor(), aes.CreateDecryptor()));
+ILocalPrefs prefs = new JsonLocalPrefs(new CryptoFileAccessor(path, encryptor, decryptor));
 
 // Save
 await prefs.SaveAsync("intkey", 123);

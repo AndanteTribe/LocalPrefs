@@ -34,7 +34,7 @@ public class CryptoFileAccessor(FileAccessor fileAccessor, ICryptoTransform encr
         }
 
         using var memoryStream = new MemoryStream(encryptedBytes);
-        using var cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read);
+        using var cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read, leaveOpen: true);
         using var decryptedStream = new MemoryStream();
         cryptoStream.CopyTo(decryptedStream);
         return decryptedStream.ToArray();
@@ -46,7 +46,7 @@ public class CryptoFileAccessor(FileAccessor fileAccessor, ICryptoTransform encr
         cancellationToken.ThrowIfCancellationRequested();
 
         using var memoryStream = new MemoryStream();
-        await using var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write);
+        await using var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write, leaveOpen: true);
         cryptoStream.Write(bytes.Span);
         cryptoStream.FlushFinalBlock();
         await fileAccessor.WriteAsync(new(memoryStream.GetBuffer(), 0, (int)memoryStream.Length), cancellationToken);

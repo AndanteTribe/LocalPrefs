@@ -34,7 +34,12 @@ namespace AndanteTribe.IO.Tests
             {
                 aes.Mode = System.Security.Cryptography.CipherMode.ECB;
             }
-            return new CryptoFileAccessor(path, aes.CreateEncryptor(), aes.CreateDecryptor());
+            
+            var encryptor = aes.CreateEncryptor();
+            var decryptor = aes.CreateDecryptor();
+            aes.Dispose();
+            
+            return new CryptoFileAccessor(path, encryptor, decryptor);
         }
 
         [SetUp]
