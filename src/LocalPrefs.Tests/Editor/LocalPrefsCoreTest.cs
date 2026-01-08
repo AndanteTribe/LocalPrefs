@@ -15,11 +15,27 @@ namespace AndanteTribe.IO.Tests
         {
             () => new JsonLocalPrefs(LocalPrefsTest.TestFilePath),
             () => new MessagePackLocalPrefs(LocalPrefsTest.TestFilePath),
-            () => new JsonLocalPrefs(new CryptoFileAccessor(LocalPrefsTest.TestFilePath, LocalPrefsTest.TestKey, LocalPrefsTest.TestIv)),
-            () => new MessagePackLocalPrefs(new CryptoFileAccessor(LocalPrefsTest.TestFilePath, LocalPrefsTest.TestKey, LocalPrefsTest.TestIv)),
-            () => new JsonLocalPrefs(new CryptoFileAccessor(LocalPrefsTest.TestFilePath, LocalPrefsTest.TestKey)),
-            () => new MessagePackLocalPrefs(new CryptoFileAccessor(LocalPrefsTest.TestFilePath, LocalPrefsTest.TestKey)),
+            () => new JsonLocalPrefs(CreateCryptoFileAccessor(LocalPrefsTest.TestFilePath, LocalPrefsTest.TestKey, LocalPrefsTest.TestIv)),
+            () => new MessagePackLocalPrefs(CreateCryptoFileAccessor(LocalPrefsTest.TestFilePath, LocalPrefsTest.TestKey, LocalPrefsTest.TestIv)),
+            () => new JsonLocalPrefs(CreateCryptoFileAccessor(LocalPrefsTest.TestFilePath, LocalPrefsTest.TestKey)),
+            () => new MessagePackLocalPrefs(CreateCryptoFileAccessor(LocalPrefsTest.TestFilePath, LocalPrefsTest.TestKey)),
         };
+
+        private static CryptoFileAccessor CreateCryptoFileAccessor(string path, byte[] key, byte[]? iv = null)
+        {
+            var aes = System.Security.Cryptography.Aes.Create();
+            aes.Key = key;
+            if (iv != null && iv.Length > 0)
+            {
+                aes.IV = iv;
+                aes.Mode = System.Security.Cryptography.CipherMode.CBC;
+            }
+            else
+            {
+                aes.Mode = System.Security.Cryptography.CipherMode.ECB;
+            }
+            return new CryptoFileAccessor(path, aes.CreateEncryptor(), aes.CreateDecryptor());
+        }
 
         [SetUp]
         public void Setup()

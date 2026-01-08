@@ -19,11 +19,27 @@ namespace AndanteTribe.IO.Unity.Tests
         {
             () => new JsonLocalPrefs(s_accessor),
             () => new MessagePackLocalPrefs(s_accessor),
-            () => new JsonLocalPrefs(new CryptoFileAccessor(s_accessor, LocalPrefsTest.TestKey, LocalPrefsTest.TestIv)),
-            () => new MessagePackLocalPrefs(new CryptoFileAccessor(s_accessor, LocalPrefsTest.TestKey, LocalPrefsTest.TestIv)),
-            () => new JsonLocalPrefs(new CryptoFileAccessor(s_accessor, LocalPrefsTest.TestKey)),
-            () => new MessagePackLocalPrefs(new CryptoFileAccessor(s_accessor, LocalPrefsTest.TestKey)),
+            () => new JsonLocalPrefs(CreateCryptoFileAccessor(s_accessor, LocalPrefsTest.TestKey, LocalPrefsTest.TestIv)),
+            () => new MessagePackLocalPrefs(CreateCryptoFileAccessor(s_accessor, LocalPrefsTest.TestKey, LocalPrefsTest.TestIv)),
+            () => new JsonLocalPrefs(CreateCryptoFileAccessor(s_accessor, LocalPrefsTest.TestKey)),
+            () => new MessagePackLocalPrefs(CreateCryptoFileAccessor(s_accessor, LocalPrefsTest.TestKey)),
         };
+
+        private static CryptoFileAccessor CreateCryptoFileAccessor(FileAccessor fileAccessor, byte[] key, byte[]? iv = null)
+        {
+            var aes = System.Security.Cryptography.Aes.Create();
+            aes.Key = key;
+            if (iv != null && iv.Length > 0)
+            {
+                aes.IV = iv;
+                aes.Mode = System.Security.Cryptography.CipherMode.CBC;
+            }
+            else
+            {
+                aes.Mode = System.Security.Cryptography.CipherMode.ECB;
+            }
+            return new CryptoFileAccessor(fileAccessor, aes.CreateEncryptor(), aes.CreateDecryptor());
+        }
 
         [SetUp]
         public void Setup()

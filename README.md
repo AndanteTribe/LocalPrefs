@@ -118,6 +118,7 @@ It can be passed to a `JsonLocalPrefs` instance as shown below:
 ```csharp
 using AndanteTribe.IO;
 using AndanteTribe.IO.Json;
+using System.Security.Cryptography;
 
 string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "DefaultCompany", "test", "localprefs-test");
 
@@ -128,13 +129,19 @@ byte[] key = {
     0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20
 };
 
-public static readonly byte[] iv = {
+byte[] iv = {
     0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28,
     0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, 0x30
 };
 
-// Set CryptoFileAccessor
-ILocalPrefs prefs = new JsonLocalPrefs(new CryptoFileAccessor(path, key, iv));
+// Create AES crypto transforms
+var aes = Aes.Create();
+aes.Key = key;
+aes.IV = iv;
+aes.Mode = CipherMode.CBC;
+
+// Set CryptoFileAccessor with ICryptoTransform
+ILocalPrefs prefs = new JsonLocalPrefs(new CryptoFileAccessor(path, aes.CreateEncryptor(), aes.CreateDecryptor()));
 
 // Save
 await prefs.SaveAsync("intkey", 123);
