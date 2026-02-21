@@ -2,7 +2,8 @@
     "name": "LocalPrefs.Unity",
     "rootNamespace": "AndanteTribe.IO.Unity",
     "references": [
-        "GUID:034c977408447714e91237bd5f97c1ff"
+        "GUID:034c977408447714e91237bd5f97c1ff",
+        "GUID:f04caea560db23843b70f5b24fba7cf2"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -22,6 +23,11 @@
             "name": "com.github.messagepack-csharp",
             "expression": "",
             "define": "ENABLE_MESSAGEPACK"
+        },
+        {
+            "name": "com.unity.platformtoolkit",
+            "expression": "",
+            "define": "ENABLE_PLATFORMTOOLKIT"
         }
     ],
     "noEngineReferences": false
