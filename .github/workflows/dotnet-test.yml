@@ -5,9 +5,13 @@ on:
     types:
       - opened
       - synchronize
+    paths:
+      - 'src/**'
   push:
     branches:
-    - main
+      - main
+    paths:
+      - 'src/**'
   workflow_dispatch: {}
 
 jobs:
