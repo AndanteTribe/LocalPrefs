@@ -32,7 +32,7 @@ namespace AndanteTribe.IO.Unity
                 Debug.LogWarning("Failed to initialize LocalPrefs.Shared: No supported serializer found.");
                 return;
             }
-            LocalPrefs.Shared = (ILocalPrefs)Activator.CreateInstance(localPrefsType, fileAccessor)!;
+            LocalPrefs.Shared = (ILocalPrefs)Activator.CreateInstance(localPrefsType, fileAccessor, null)!;
 #endif
         }
     }
