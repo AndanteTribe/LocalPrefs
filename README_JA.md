@@ -23,7 +23,7 @@ Unityの `UnityEngine.PlayerPrefs` は非常に問題の多いAPIで、以下の
 
 LocalPrefsはこれらの問題を解消し、かつ高速な実装を提供します。
 
-1. `LocalPrefs.Shared` の保存先はUnityの場合は `Application.persistentDataPath`、.NETの場合もそれに準じたパスが指定されます。
+1. `LocalPrefs.Shared` （`LocalPrefs.Unity`）の保存先は基本的に `Application.persistentDataPath` 、WebGLだと自動的に最適な保存先が指定されます。
 2. 保存先や暗号化など、独自の拡張をすることを入れ込むことを可能にするAPIを提供します。また、セーブ・ロードの一括制御をする実装の抽象レイヤーとして `ILocalPrefs` インターフェイスを提供します。
 3. `System.Text.Json` または [MessagePack-CSharp](https://github.com/MessagePack-CSharp/MessagePack-CSharp) を利用した、高速な読み込み実装を提供します。
 4. JavaScriptネイティブな実装との連携により、Local storageとIndexedDBへの保存・展開を可能とするAPIの提供、およびそれらを利用した一括制御実装を提供します。
@@ -59,7 +59,7 @@ Install-Package LocalPrefs.MessagePack
 指定する型は依存するシリアライザーによります。シリアライザー側の要件を満たせればどの型でもセーブ・ロードが可能です。
 
 ```cs
-using AndanteTribe.IO;
+using AndanteTribe.IO.Unity;
 
 var hoge = new Hoge();
 
