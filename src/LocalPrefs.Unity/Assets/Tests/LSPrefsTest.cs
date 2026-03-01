@@ -36,6 +36,9 @@ namespace AndanteTribe.IO.Unity.Tests
             LSUtils.Delete(LocalPrefsTest.TestFilePath);
         }
 
+        [Test]
+        public void Shared_IsNotNull() => LocalPrefsTest.Shared_IsNotNul();
+
         [UnityTest]
         public IEnumerator SaveAndLoad_Int([ValueSource(nameof(s_factories))] Func<ILocalPrefs> factory)
         {

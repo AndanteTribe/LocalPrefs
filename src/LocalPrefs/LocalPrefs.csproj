@@ -22,11 +22,5 @@
         <RepositoryType>git</RepositoryType>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
-    
-    <ItemGroup>
-        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-            <_Parameter1>LocalPrefs.Unity</_Parameter1>
-        </AssemblyAttribute>
-    </ItemGroup>
 
 </Project>

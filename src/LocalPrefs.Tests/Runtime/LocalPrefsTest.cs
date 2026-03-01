@@ -26,6 +26,10 @@ namespace AndanteTribe.IO.Tests
             0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, 0x30
         };
 
+#if UNITY_EDITOR || UNITY_WEBGL
+        public static void Shared_IsNotNul() => Assert.That(Unity.LocalPrefs.Shared, Is.Not.Null);
+#endif
+
         public static async ValueTask SaveAndLoad_Int(Func<ILocalPrefs> factory)
         {
             var prefs = factory();

@@ -1,4 +1,5 @@
 ﻿#nullable enable
+using System;
 using UnityEngine;
 
 [assembly: UnityEngine.Scripting.AlwaysLinkAssembly]
@@ -24,7 +25,14 @@ namespace AndanteTribe.IO.Unity
 #if ENABLE_MESSAGEPACK
             LocalPrefs.Shared = new MessagePack.MessagePackLocalPrefs(fileAccessor);
 #else
-            LocalPrefs.Shared = new Json.JsonLocalPrefs(fileAccessor);
+            var localPrefsType = Type.GetType("AndanteTribe.IO.Json.JsonLocalPrefs, LocalPrefs.Json");
+            localPrefsType ??= Type.GetType("AndanteTribe.IO.MessagePack.MessagePackLocalPrefs, LocalPrefs.MessagePack");
+            if (localPrefsType == null)
+            {
+                Debug.LogWarning("Failed to initialize LocalPrefs.Shared: No supported serializer found.");
+                return;
+            }
+            LocalPrefs.Shared = (ILocalPrefs)Activator.CreateInstance(localPrefsType, fileAccessor, null)!;
 #endif
         }
     }

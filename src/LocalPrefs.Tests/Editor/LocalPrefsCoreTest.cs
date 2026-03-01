@@ -47,6 +47,11 @@ namespace AndanteTribe.IO.Tests
             }
         }
 
+#if UNITY_EDITOR || UNITY_WEBGL
+        [Test]
+        public void Shared_IsNotNull() => LocalPrefsTest.Shared_IsNotNul();
+#endif
+
         [TestCaseSource(nameof(s_factories))]
         public Task SaveAndLoad_Int(Func<ILocalPrefs> factory)=>
             LocalPrefsTest.SaveAndLoad_Int(factory).AsTask();

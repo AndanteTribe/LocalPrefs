@@ -175,15 +175,5 @@
             <param name="key">The key to check for existence.</param>
             <returns><c>true</c> if data exists for the specified key; otherwise, <c>false</c>.</returns>
         </member>
-        <member name="T:AndanteTribe.IO.LocalPrefs">
-            <summary>
-            Provides access to the shared instance of <see cref="T:AndanteTribe.IO.ILocalPrefs"/>.
-            </summary>
-        </member>
-        <member name="P:AndanteTribe.IO.LocalPrefs.Shared">
-            <summary>
-            Shared instance of <see cref="T:AndanteTribe.IO.ILocalPrefs"/>.
-            </summary>
-        </member>
     </members>
 </doc>
