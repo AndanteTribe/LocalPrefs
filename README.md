@@ -23,7 +23,7 @@ Unity’s built-in `UnityEngine.PlayerPrefs` API is known for several critical i
 
 **LocalPrefs** addresses these problems and offers a high-performance implementation.
 
-1. When using `LocalPrefs.Shared`, the default save path is `Application.persistentDataPath` in Unity. In .NET environments, an equivalent persistent path is used.
+1. The save path of `LocalPrefs.Shared` (`LocalPrefs.Unity`) defaults to `Application.persistentDataPath`. On WebGL, the optimal save destination is automatically configured.
 2. It provides APIs that allow customization, such as defining save paths and encryption. It also offers an abstraction layer through the `ILocalPrefs` interface to enable unified save/load management.
 3. It supports high-performance serialization using either `System.Text.Json` or [MessagePack-CSharp](https://github.com/MessagePack-CSharp/MessagePack-CSharp).
 4. By integrating with native JavaScript, it supports APIs for saving/loading using Local Storage and IndexedDB, along with unified implementations based on these.
@@ -62,7 +62,7 @@ The simplest implementation uses `LocalPrefs.Shared`.
 The types that can be saved/loaded depend on the serializer used. As long as the serializer’s requirements are met, any type can be handled.
 
 ```csharp
-using AndanteTribe.IO;
+using AndanteTribe.IO.Unity;
 
 var hoge = new Hoge();
 
