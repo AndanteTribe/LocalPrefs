@@ -25,14 +25,22 @@ namespace AndanteTribe.IO.Unity
 #if ENABLE_MESSAGEPACK
             LocalPrefs.Shared = new MessagePack.MessagePackLocalPrefs(fileAccessor);
 #else
-            var localPrefsType = Type.GetType("AndanteTribe.IO.Json.JsonLocalPrefs, LocalPrefs.Json");
-            localPrefsType ??= Type.GetType("AndanteTribe.IO.MessagePack.MessagePackLocalPrefs, LocalPrefs.MessagePack");
-            if (localPrefsType == null)
+            var ctor = Type.GetType("AndanteTribe.IO.Json.JsonLocalPrefs, LocalPrefs.Json")?.GetConstructor(new[]
+            {
+                typeof(FileAccessor),
+                Type.GetType("System.Text.Json.JsonSerializerOptions, System.Text.Json")
+            });
+            ctor ??= Type.GetType("AndanteTribe.IO.MessagePack.MessagePackLocalPrefs, LocalPrefs.MessagePack")?.GetConstructor(new[]
+            {
+                typeof(FileAccessor),
+                Type.GetType("MessagePack.MessagePackSerializerOptions, MessagePack")
+            });
+            if (ctor == null)
             {
                 Debug.LogWarning("Failed to initialize LocalPrefs.Shared: No supported serializer found.");
                 return;
             }
-            LocalPrefs.Shared = (ILocalPrefs)Activator.CreateInstance(localPrefsType, fileAccessor, null)!;
+            LocalPrefs.Shared = (ILocalPrefs)ctor.Invoke(new object?[] { fileAccessor, null });
 #endif
         }
     }
