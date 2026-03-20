@@ -13,7 +13,7 @@ namespace AndanteTribe.IO.Unity
     public class LSAccessor : FileAccessor
     {
         /// <inheritdoc />
-        protected internal override string SavePath { get; }
+        protected override string SavePath { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LSAccessor"/> class with the specified path.
