@@ -17,7 +17,7 @@ jobs:
           with:
             ref: ${{ github.event.pull_request.head.sha || github.sha }}
         - name: Unity Cache
-          uses: AndanteTribe/Actions/actions/unity-cache@main
+          uses: AndanteTribe/Actions/actions/unity-cache@copilot/optimize-dotnet10-cache-usage
           with:
             unity-project-path: src/LocalPrefs.Unity
             use-nugetforunity: true
