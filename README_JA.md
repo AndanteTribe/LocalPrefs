@@ -110,8 +110,6 @@ LocalPrefsでのファイルの入出力操作実装の抽象レイヤーです�
 `FileAccessor` 実装の一例である `CryptoFileAccessor` を、暗号化セーブ・複合化ロードの汎用実装として提供しています。
 **AES-GCM** 認証付き暗号化を使用し、書き込みごとにランダムなナンスを生成します。機密性と整合性を一度の処理で提供するため、別途 HMAC は不要です。
 
-> **⚠️ 破壊的変更 (v0.5.x → v0.6.x):** ディスク上のフォーマットが AES-CBC + HMAC-SHA256 から AES-GCM に変更されました。旧バージョンで書き込まれたファイルは新バージョンで復号できず、`CryptographicException` がスローされます。アップグレード前に全データを平文で読み出し、アップグレード後に再保存してください。
-
 ```cs
 using AndanteTribe.IO;
 using AndanteTribe.IO.Json;

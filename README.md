@@ -115,8 +115,6 @@ The factory method `FileAccessor.Create(in string path)` provides a default impl
 `CryptoFileAccessor` is a general-purpose implementation that enables encrypted saving and decrypted loading.
 It uses **AES-GCM** authenticated encryption with a fresh random nonce per write, providing both confidentiality and integrity in a single pass — no separate HMAC step is required.
 
-> **⚠️ Breaking change (v0.5.x → v0.6.x):** The on-disk format changed from AES-CBC + HMAC-SHA256 to AES-GCM. Files written by an older version cannot be decrypted by the new version and will throw `CryptographicException`. To migrate, read and re-save all data after upgrading.
-
 ```csharp
 using AndanteTribe.IO;
 using AndanteTribe.IO.Json;

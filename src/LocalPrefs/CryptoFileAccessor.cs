@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Buffers;
+using System.Security.Cryptography;
 
 namespace AndanteTribe.IO;
 
@@ -73,17 +74,25 @@ public class CryptoFileAccessor : FileAccessor
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        // Allocate a single output buffer: [nonce (12)][tag (16)][ciphertext (N)]
-        var output = new byte[NonceSize + TagSize + bytes.Length];
-        var nonce = output.AsSpan(0, NonceSize);
-        var tag = output.AsSpan(NonceSize, TagSize);
-        var ciphertext = output.AsSpan(NonceSize + TagSize);
+        // Rent a single buffer: [nonce (12)][tag (16)][ciphertext (N)]
+        var outputSize = NonceSize + TagSize + bytes.Length;
+        var buffer = ArrayPool<byte>.Shared.Rent(outputSize);
+        try
+        {
+            var nonce = buffer.AsSpan(0, NonceSize);
+            var tag = buffer.AsSpan(NonceSize, TagSize);
+            var ciphertext = buffer.AsSpan(NonceSize + TagSize, bytes.Length);
 
-        RandomNumberGenerator.Fill(nonce);
-        using var aes = new AesGcm(_key);
-        aes.Encrypt(nonce, bytes.Span, ciphertext, tag);
+            RandomNumberGenerator.Fill(nonce);
+            using var aes = new AesGcm(_key);
+            aes.Encrypt(nonce, bytes.Span, ciphertext, tag);
 
-        await _fileAccessor.WriteAsync(new ReadOnlyMemory<byte>(output), cancellationToken);
+            await _fileAccessor.WriteAsync(new ReadOnlyMemory<byte>(buffer, 0, outputSize), cancellationToken);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer, clearArray: true);
+        }
     }
 
     /// <inheritdoc />
