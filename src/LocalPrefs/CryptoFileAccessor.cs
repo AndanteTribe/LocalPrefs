@@ -20,7 +20,7 @@ public class CryptoFileAccessor(FileAccessor fileAccessor, byte[] key, byte[] iv
     /// </summary>
     /// <param name="fileAccessor">FileAccessor to be decorated with encryption.</param>
     /// <param name="key">Encryption key used for AES encryption.</param>
-    public CryptoFileAccessor(FileAccessor fileAccessor, byte[] key) : this(fileAccessor, key, [], CipherMode.ECB)
+    public CryptoFileAccessor(FileAccessor fileAccessor, byte[] key) : this(fileAccessor, key, [], CipherMode.CBC)
     {
     }
 
@@ -40,7 +40,7 @@ public class CryptoFileAccessor(FileAccessor fileAccessor, byte[] key, byte[] iv
     /// </summary>
     /// <param name="path">Path to the file where preference data will be stored.</param>
     /// <param name="key">Encryption key used for AES encryption.</param>
-    public CryptoFileAccessor(in string path, byte[] key) : this(Create(path), key, [], CipherMode.ECB)
+    public CryptoFileAccessor(in string path, byte[] key) : this(Create(path), key, [], CipherMode.CBC)
     {
     }
 
