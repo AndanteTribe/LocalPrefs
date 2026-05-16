@@ -108,7 +108,7 @@ LocalPrefsでのファイルの入出力操作実装の抽象レイヤーです�
 ファクトリメソッド `FileAccessor.Create(in string path)` で、 `System.IO` を利用した標準的なファイル操作を実装済みの `FileAccessor` インスタンスを作成することができます。
 ## 暗号化
 `FileAccessor` 実装の一例である `CryptoFileAccessor` を、暗号化セーブ・複合化ロードの汎用実装として提供しています。
-**AES-GCM** 認証付き暗号化を使用し、書き込みごとにランダムなナンスを生成します。機密性と整合性を一度の処理で提供するため、別途 HMAC は不要です。
+**AES-CBC** 暗号化と **HMAC-SHA256** による整合性検証を使用します。書き込みごとにランダムな IV を生成するため、同じ平文でも毎回異なる暗号文が生成されます。改ざんは復号前に検出されます。
 
 ```cs
 using AndanteTribe.IO;
@@ -123,7 +123,7 @@ byte[] key = {
     0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20
 };
 
-// Set CryptoFileAccessor — ナンスは書き込み時に自動生成されます
+// Set CryptoFileAccessor — IV は書き込み時に自動生成されます
 ILocalPrefs prefs = new JsonLocalPrefs(new CryptoFileAccessor(path, key));
 
 // Save

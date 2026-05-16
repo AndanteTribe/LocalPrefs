@@ -113,7 +113,7 @@ The factory method `FileAccessor.Create(in string path)` provides a default impl
 
 ## Encryption
 `CryptoFileAccessor` is a general-purpose implementation that enables encrypted saving and decrypted loading.
-It uses **AES-GCM** authenticated encryption with a fresh random nonce per write, providing both confidentiality and integrity in a single pass — no separate HMAC step is required.
+It uses **AES-CBC** encryption with **HMAC-SHA256** integrity verification. A fresh random IV is generated on every write, so the same plaintext never produces the same ciphertext twice. Any tampering is detected before decryption.
 
 ```csharp
 using AndanteTribe.IO;
@@ -128,7 +128,7 @@ byte[] key = {
     0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20
 };
 
-// Set CryptoFileAccessor — a random nonce is generated and stored on each write
+// Set CryptoFileAccessor — a random IV is generated and stored on each write
 ILocalPrefs prefs = new JsonLocalPrefs(new CryptoFileAccessor(path, key));
 
 // Save

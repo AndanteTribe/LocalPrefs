@@ -233,33 +233,33 @@ namespace AndanteTribe.IO.Tests
 
         public static async ValueTask CryptoFileAccessor_TamperedFile_ThrowsCryptographicException(string filePath)
         {
-            const int nonceSize = 12; // AES-GCM nonce length
-            const int tagSize = 16;   // AES-GCM tag length
+            const int hmacSize = 32; // HMAC-SHA256 output length
+            const int ivSize = 16;   // AES CBC IV length
 
             // Write a valid encrypted value and save the original bytes for isolated sub-tests
             var accessor = new CryptoFileAccessor(filePath, TestKey);
             await accessor.WriteAsync(new byte[] { 0x01, 0x02, 0x03, 0x04 });
             var validBytes = File.ReadAllBytes(filePath);
 
-            // 1. Corrupt the first byte of the ciphertext body (after nonce + tag)
+            // 1. Corrupt the first byte of the ciphertext body (after HMAC + IV)
             var tampered = (byte[])validBytes.Clone();
-            tampered[nonceSize + tagSize] ^= 0xFF;
+            tampered[hmacSize + ivSize] ^= 0xFF;
             File.WriteAllBytes(filePath, tampered);
             Assert.That(() => accessor.ReadAllBytes(), Throws.InstanceOf<CryptographicException>());
 
-            // 2. Corrupt the first byte of the authentication tag
-            tampered = (byte[])validBytes.Clone();
-            tampered[nonceSize] ^= 0xFF;  // tag immediately follows the nonce
-            File.WriteAllBytes(filePath, tampered);
-            Assert.That(() => accessor.ReadAllBytes(), Throws.InstanceOf<CryptographicException>());
-
-            // 3. Corrupt the first byte of the nonce
+            // 2. Corrupt the first byte of the HMAC
             tampered = (byte[])validBytes.Clone();
             tampered[0] ^= 0xFF;
             File.WriteAllBytes(filePath, tampered);
             Assert.That(() => accessor.ReadAllBytes(), Throws.InstanceOf<CryptographicException>());
 
-            // 4. File too short to contain nonce + tag — length check before any decryption
+            // 3. Corrupt the first byte of the IV (HMAC covers the IV so this also fails MAC check)
+            tampered = (byte[])validBytes.Clone();
+            tampered[hmacSize] ^= 0xFF;
+            File.WriteAllBytes(filePath, tampered);
+            Assert.That(() => accessor.ReadAllBytes(), Throws.InstanceOf<CryptographicException>());
+
+            // 4. File too short to contain HMAC + IV — length check before any decryption
             File.WriteAllBytes(filePath, new byte[] { 0x01, 0x02, 0x03 });
             Assert.That(() => accessor.ReadAllBytes(), Throws.InstanceOf<CryptographicException>());
         }
