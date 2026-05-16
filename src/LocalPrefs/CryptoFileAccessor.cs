@@ -20,6 +20,8 @@ public class CryptoFileAccessor : FileAccessor
     private const int HmacSize = 32;  // HMAC-SHA256 output length (256 bits)
     private const int IvSize = 16;    // AES block size / CBC IV length (128 bits)
 
+    private static readonly byte[] s_hmacLabel = "LocalPrefs.HMAC"u8.ToArray();
+
     private readonly FileAccessor _fileAccessor;
     private readonly byte[] _aesKey;
     private readonly byte[] _hmacKey;
@@ -71,8 +73,7 @@ public class CryptoFileAccessor : FileAccessor
         }
 
         // Decrypt using the stored IV
-        var iv = data.AsSpan(HmacSize, IvSize).ToArray();
-        using var aes = CreateAes(iv);
+        using var aes = CreateAes(data.AsSpan(HmacSize, IvSize));
         using var decryptor = aes.CreateDecryptor();
         using var ciphertextStream = new MemoryStream(data, HmacSize + IvSize, data.Length - HmacSize - IvSize);
         using var cryptoStream = new CryptoStream(ciphertextStream, decryptor, CryptoStreamMode.Read);
@@ -130,12 +131,13 @@ public class CryptoFileAccessor : FileAccessor
     /// </summary>
     /// <param name="iv">The 16-byte initialization vector for this operation.</param>
     /// <returns>A configured <see cref="Aes"/> instance.</returns>
-    private Aes CreateAes(byte[] iv)
+    private Aes CreateAes(ReadOnlySpan<byte> iv)
     {
         var aes = Aes.Create();
         aes.Key = _aesKey;
-        aes.IV = iv;
+        aes.IV = iv.ToArray();
         aes.Mode = CipherMode.CBC;
+        aes.Padding = PaddingMode.PKCS7;
         return aes;
     }
 
@@ -150,6 +152,6 @@ public class CryptoFileAccessor : FileAccessor
     private static byte[] DeriveHmacKey(byte[] masterKey)
     {
         using var hmac = new HMACSHA256(masterKey);
-        return hmac.ComputeHash("LocalPrefs.HMAC"u8.ToArray());
+        return hmac.ComputeHash(s_hmacLabel);
     }
 }

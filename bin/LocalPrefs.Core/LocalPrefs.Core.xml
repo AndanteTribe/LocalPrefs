@@ -44,7 +44,7 @@
         <member name="M:AndanteTribe.IO.CryptoFileAccessor.DeleteAsync(System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
-        <member name="M:AndanteTribe.IO.CryptoFileAccessor.CreateAes(System.Byte[])">
+        <member name="M:AndanteTribe.IO.CryptoFileAccessor.CreateAes(System.ReadOnlySpan{System.Byte})">
             <summary>
             Creates an AES-CBC algorithm instance configured with the provided IV.
             </summary>
