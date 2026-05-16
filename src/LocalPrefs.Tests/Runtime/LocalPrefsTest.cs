@@ -231,7 +231,6 @@ namespace AndanteTribe.IO.Tests
             }
         }
 
-#if (!UNITY_EDITOR && UNITY_WEBGL) || DOTNET_TEST
         public static async ValueTask CryptoFileAccessor_TamperedFile_ThrowsCryptographicException(string filePath)
         {
             const int nonceSize = 12; // AES-GCM nonce length
@@ -264,6 +263,5 @@ namespace AndanteTribe.IO.Tests
             File.WriteAllBytes(filePath, new byte[] { 0x01, 0x02, 0x03 });
             Assert.That(() => accessor.ReadAllBytes(), Throws.InstanceOf<CryptographicException>());
         }
-#endif
     }
 }
