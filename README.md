@@ -113,6 +113,7 @@ The factory method `FileAccessor.Create(in string path)` provides a default impl
 
 ## Encryption
 `CryptoFileAccessor` is a general-purpose implementation that enables encrypted saving and decrypted loading.
+It uses **AES-CBC** with a fresh random IV per write and **HMAC-SHA256** integrity verification to detect tampering.
 It can be passed to a `JsonLocalPrefs` instance as shown below:
 
 ```csharp
@@ -128,13 +129,8 @@ byte[] key = {
     0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20
 };
 
-public static readonly byte[] iv = {
-    0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28,
-    0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, 0x30
-};
-
-// Set CryptoFileAccessor
-ILocalPrefs prefs = new JsonLocalPrefs(new CryptoFileAccessor(path, key, iv));
+// Set CryptoFileAccessor — the IV is generated automatically on each write
+ILocalPrefs prefs = new JsonLocalPrefs(new CryptoFileAccessor(path, key));
 
 // Save
 await prefs.SaveAsync("intkey", 123);

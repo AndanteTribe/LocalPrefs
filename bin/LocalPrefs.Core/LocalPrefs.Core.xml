@@ -6,49 +6,33 @@
     <members>
         <member name="T:AndanteTribe.IO.CryptoFileAccessor">
             <summary>
-            A file accessor that encrypts and decrypts file content using AES encryption.
-            Implements the decorator pattern by wrapping another FileAccessor instance.
+            A file accessor that encrypts and decrypts file content using AES-CBC encryption
+            with HMAC-SHA256 integrity verification. Implements the decorator pattern by wrapping
+            another <see cref="T:AndanteTribe.IO.FileAccessor"/> instance.
             </summary>
-            <param name="fileAccessor">The underlying file accessor to be decorated with encryption.</param>
-            <param name="key">The encryption key used for AES encryption.</param>
-            <param name="iv">The initialization vector used for AES encryption.</param>
-            <param name="mode">The cipher mode to use for AES encryption. Defaults to CBC.</param>
-        </member>
-        <member name="M:AndanteTribe.IO.CryptoFileAccessor.#ctor(AndanteTribe.IO.FileAccessor,System.Byte[],System.Byte[],System.Security.Cryptography.CipherMode)">
-            <summary>
-            A file accessor that encrypts and decrypts file content using AES encryption.
-            Implements the decorator pattern by wrapping another FileAccessor instance.
-            </summary>
-            <param name="fileAccessor">The underlying file accessor to be decorated with encryption.</param>
-            <param name="key">The encryption key used for AES encryption.</param>
-            <param name="iv">The initialization vector used for AES encryption.</param>
-            <param name="mode">The cipher mode to use for AES encryption. Defaults to CBC.</param>
+            <remarks>
+            The on-disk format is: <c>[HMAC-SHA256 (32 bytes)][random IV (16 bytes)][AES-CBC ciphertext]</c>.
+            A fresh random IV is generated for every write, so the same plaintext never produces the
+            same ciphertext twice. The HMAC covers both the IV and the ciphertext, so any tampering is
+            detected before decryption.
+            </remarks>
         </member>
         <member name="P:AndanteTribe.IO.CryptoFileAccessor.SavePath">
             <inheritdoc />
         </member>
         <member name="M:AndanteTribe.IO.CryptoFileAccessor.#ctor(AndanteTribe.IO.FileAccessor,System.Byte[])">
             <summary>
-            The underlying file accessor that performs actual file operations.
+            Initializes a new instance of the <see cref="T:AndanteTribe.IO.CryptoFileAccessor"/> class.
             </summary>
-            <param name="fileAccessor">FileAccessor to be decorated with encryption.</param>
-            <param name="key">Encryption key used for AES encryption.</param>
+            <param name="fileAccessor">The underlying file accessor to be decorated with encryption.</param>
+            <param name="key">The master encryption key used for AES-CBC encryption. A separate HMAC key is derived from this key automatically.</param>
         </member>
-        <member name="M:AndanteTribe.IO.CryptoFileAccessor.#ctor(System.String@,System.Byte[],System.Byte[],System.Security.Cryptography.CipherMode)">
+        <member name="M:AndanteTribe.IO.CryptoFileAccessor.#ctor(System.String@,System.Byte[])">
             <summary>
             Initializes a new instance of the <see cref="T:AndanteTribe.IO.CryptoFileAccessor"/> class with a specified file path.
             </summary>
             <param name="path">Path to the file where preference data will be stored.</param>
-            <param name="key">Encryption key used for AES encryption.</param>
-            <param name="iv">Initialization vector used for AES encryption.</param>
-            <param name="mode">Cipher mode to use for AES encryption. Defaults to CBC.</param>
-        </member>
-        <member name="M:AndanteTribe.IO.CryptoFileAccessor.#ctor(System.String@,System.Byte[])">
-            <summary>
-            Initializes a new instance of the <see cref="T:AndanteTribe.IO.CryptoFileAccessor"/> class with a specified file path and encryption key.
-            </summary>
-            <param name="path">Path to the file where preference data will be stored.</param>
-            <param name="key">Encryption key used for AES encryption.</param>
+            <param name="key">The master encryption key used for AES-CBC encryption. A separate HMAC key is derived from this key automatically.</param>
         </member>
         <member name="M:AndanteTribe.IO.CryptoFileAccessor.ReadAllBytes">
             <inheritdoc />
@@ -59,11 +43,25 @@
         <member name="M:AndanteTribe.IO.CryptoFileAccessor.DeleteAsync(System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
-        <member name="M:AndanteTribe.IO.CryptoFileAccessor.CreateAes">
+        <member name="M:AndanteTribe.IO.CryptoFileAccessor.CreateAes(System.Byte[])">
             <summary>
-            Creates an AES algorithm instance with the provided key, IV, and cipher mode.
+            Creates an AES-CBC algorithm instance configured with the provided IV.
             </summary>
-            <returns>A configured AES algorithm instance.</returns>
+            <param name="iv">The 16-byte initialization vector for this operation.</param>
+            <returns>A configured <see cref="T:System.Security.Cryptography.Aes"/> instance.</returns>
+        </member>
+        <member name="M:AndanteTribe.IO.CryptoFileAccessor.DeriveHmacKey(System.Byte[])">
+            <summary>
+            Derives a dedicated HMAC key from the master AES key so that the same key material
+            is never used for two different cryptographic operations.
+            </summary>
+            <remarks>
+            This uses HMAC-SHA256 with a fixed label as a simple key derivation function (KDF).
+            This is equivalent to the HKDF-Extract step and is the recommended approach for
+            .NET Standard 2.1, where <see cref="!:System.Security.Cryptography.HKDF"/> is not available.
+            </remarks>
+            <param name="masterKey">The master encryption key.</param>
+            <returns>A 32-byte HMAC key derived from <paramref name="masterKey"/>.</returns>
         </member>
         <member name="T:AndanteTribe.IO.FileAccessor">
             <summary>
