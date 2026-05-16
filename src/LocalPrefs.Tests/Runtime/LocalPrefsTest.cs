@@ -234,25 +234,35 @@ namespace AndanteTribe.IO.Tests
 #if (!UNITY_EDITOR && UNITY_WEBGL) || DOTNET_TEST
         public static async ValueTask CryptoFileAccessor_TamperedFile_ThrowsCryptographicException(string filePath)
         {
-            // Write a valid encrypted value
+            const int nonceSize = 12; // AES-GCM nonce length
+            const int tagSize = 16;   // AES-GCM tag length
+
+            // Write a valid encrypted value and save the original bytes for isolated sub-tests
             var accessor = new CryptoFileAccessor(filePath, TestKey);
             await accessor.WriteAsync(new byte[] { 0x01, 0x02, 0x03, 0x04 });
+            var validBytes = File.ReadAllBytes(filePath);
 
-            // 1. Corrupt one byte in the ciphertext/IV area — HMAC mismatch
-            var fileBytes = File.ReadAllBytes(filePath);
-            fileBytes[fileBytes.Length / 2] ^= 0xFF;
-            File.WriteAllBytes(filePath, fileBytes);
-            Assert.Throws<CryptographicException>(() => accessor.ReadAllBytes());
+            // 1. Corrupt the first byte of the ciphertext body (after nonce + tag)
+            var tampered = (byte[])validBytes.Clone();
+            tampered[nonceSize + tagSize] ^= 0xFF;
+            File.WriteAllBytes(filePath, tampered);
+            Assert.That(() => accessor.ReadAllBytes(), Throws.InstanceOf<CryptographicException>());
 
-            // 2. Corrupt one byte in the HMAC itself — HMAC mismatch
-            fileBytes = File.ReadAllBytes(filePath);
-            fileBytes[0] ^= 0xFF;
-            File.WriteAllBytes(filePath, fileBytes);
-            Assert.Throws<CryptographicException>(() => accessor.ReadAllBytes());
+            // 2. Corrupt the first byte of the authentication tag
+            tampered = (byte[])validBytes.Clone();
+            tampered[nonceSize] ^= 0xFF;  // tag immediately follows the nonce
+            File.WriteAllBytes(filePath, tampered);
+            Assert.That(() => accessor.ReadAllBytes(), Throws.InstanceOf<CryptographicException>());
 
-            // 3. File too short to contain HMAC + IV — length check
+            // 3. Corrupt the first byte of the nonce
+            tampered = (byte[])validBytes.Clone();
+            tampered[0] ^= 0xFF;
+            File.WriteAllBytes(filePath, tampered);
+            Assert.That(() => accessor.ReadAllBytes(), Throws.InstanceOf<CryptographicException>());
+
+            // 4. File too short to contain nonce + tag — length check before any decryption
             File.WriteAllBytes(filePath, new byte[] { 0x01, 0x02, 0x03 });
-            Assert.Throws<CryptographicException>(() => accessor.ReadAllBytes());
+            Assert.That(() => accessor.ReadAllBytes(), Throws.InstanceOf<CryptographicException>());
         }
 #endif
     }
