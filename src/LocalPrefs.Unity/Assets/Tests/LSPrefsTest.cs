@@ -19,8 +19,6 @@ namespace AndanteTribe.IO.Unity.Tests
         {
             () => new JsonLocalPrefs(s_accessor),
             () => new MessagePackLocalPrefs(s_accessor),
-            () => new JsonLocalPrefs(new CryptoFileAccessor(s_accessor, LocalPrefsTest.TestKey)),
-            () => new MessagePackLocalPrefs(new CryptoFileAccessor(s_accessor, LocalPrefsTest.TestKey)),
         };
 
         [SetUp]

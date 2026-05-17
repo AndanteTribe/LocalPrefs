@@ -6,16 +6,20 @@
     <members>
         <member name="T:AndanteTribe.IO.CryptoFileAccessor">
             <summary>
-            A file accessor that encrypts and decrypts file content using AES-CBC encryption
-            with HMAC-SHA256 integrity verification. Implements the decorator pattern by wrapping
-            another <see cref="T:AndanteTribe.IO.FileAccessor"/> instance.
+            A file accessor that encrypts and decrypts file content using AES-GCM authenticated encryption.
+            Implements the decorator pattern by wrapping another <see cref="T:AndanteTribe.IO.FileAccessor"/> instance.
             </summary>
             <remarks>
-            The on-disk format is: <c>[HMAC-SHA256 (32 bytes)][random IV (16 bytes)][AES-CBC ciphertext]</c>.
-            A fresh random IV is generated for every write, so the same plaintext never produces the
-            same ciphertext twice. The HMAC covers both the IV and the ciphertext, so any tampering is
-            detected before decryption (a <see cref="T:System.Security.Cryptography.CryptographicException"/> is thrown when
-            verification fails).
+            The on-disk format is: <c>[nonce (12 bytes)][authentication tag (16 bytes)][AES-GCM ciphertext]</c>.
+            A fresh random nonce is generated for every write, providing semantic security so that the same
+            plaintext never produces the same ciphertext twice. AES-GCM provides both confidentiality and
+            integrity/authenticity in a single pass; any tampering is detected before plaintext is returned
+            (a <see cref="T:System.Security.Cryptography.CryptographicException"/> is thrown when authentication fails).
+            <para>
+            <strong>Unity / Mono:</strong> <see cref="T:System.Security.Cryptography.AesGcm"/> is not supported on Unity's Mono runtime
+            (see <see href="https://github.com/mono/mono/issues/19285"/>). Do not use
+            <see cref="T:AndanteTribe.IO.CryptoFileAccessor"/> in Unity projects.
+            </para>
             </remarks>
         </member>
         <member name="P:AndanteTribe.IO.CryptoFileAccessor.SavePath">
@@ -26,14 +30,14 @@
             Initializes a new instance of the <see cref="T:AndanteTribe.IO.CryptoFileAccessor"/> class.
             </summary>
             <param name="fileAccessor">The underlying file accessor to be decorated with encryption.</param>
-            <param name="key">The master encryption key used for AES-CBC encryption. Must be 128, 192, or 256 bits (16, 24, or 32 bytes). A separate HMAC key is derived from this key automatically.</param>
+            <param name="key">The encryption key used for AES-GCM. Must be 128, 192, or 256 bits (16, 24, or 32 bytes).</param>
         </member>
         <member name="M:AndanteTribe.IO.CryptoFileAccessor.#ctor(System.String@,System.Byte[])">
             <summary>
             Initializes a new instance of the <see cref="T:AndanteTribe.IO.CryptoFileAccessor"/> class with a specified file path.
             </summary>
             <param name="path">Path to the file where preference data will be stored.</param>
-            <param name="key">The master encryption key used for AES-CBC encryption. Must be 128, 192, or 256 bits (16, 24, or 32 bytes). A separate HMAC key is derived from this key automatically.</param>
+            <param name="key">The encryption key used for AES-GCM. Must be 128, 192, or 256 bits (16, 24, or 32 bytes).</param>
         </member>
         <member name="M:AndanteTribe.IO.CryptoFileAccessor.ReadAllBytes">
             <inheritdoc />
@@ -43,23 +47,6 @@
         </member>
         <member name="M:AndanteTribe.IO.CryptoFileAccessor.DeleteAsync(System.Threading.CancellationToken)">
             <inheritdoc />
-        </member>
-        <member name="M:AndanteTribe.IO.CryptoFileAccessor.CreateAes(System.ReadOnlySpan{System.Byte})">
-            <summary>
-            Creates an AES-CBC algorithm instance configured with the provided IV.
-            </summary>
-            <param name="iv">The 16-byte initialization vector for this operation.</param>
-            <returns>A configured <see cref="T:System.Security.Cryptography.Aes"/> instance.</returns>
-        </member>
-        <member name="M:AndanteTribe.IO.CryptoFileAccessor.DeriveHmacKey(System.Byte[])">
-            <summary>
-            Derives a dedicated HMAC key from the master key by computing
-            HMAC-SHA256 over a fixed label using the master key as the HMAC key.
-            This prevents the same key material from being used for both AES-CBC encryption
-            and MAC computation.
-            </summary>
-            <param name="masterKey">The master encryption key.</param>
-            <returns>A 32-byte HMAC key derived from <paramref name="masterKey"/>.</returns>
         </member>
         <member name="T:AndanteTribe.IO.FileAccessor">
             <summary>

@@ -15,8 +15,10 @@ namespace AndanteTribe.IO.Tests
         {
             () => new JsonLocalPrefs(LocalPrefsTest.TestFilePath),
             () => new MessagePackLocalPrefs(LocalPrefsTest.TestFilePath),
+#if !UNITY_EDITOR && !UNITY_WEBGL
             () => new JsonLocalPrefs(new CryptoFileAccessor(LocalPrefsTest.TestFilePath, LocalPrefsTest.TestKey)),
             () => new MessagePackLocalPrefs(new CryptoFileAccessor(LocalPrefsTest.TestFilePath, LocalPrefsTest.TestKey)),
+#endif
         };
 
         [SetUp]
@@ -114,8 +116,10 @@ namespace AndanteTribe.IO.Tests
         public Task AddAndRemoveMultipleTimes(Func<ILocalPrefs> factory)=>
             LocalPrefsTest.AddAndRemoveMultipleTimes(factory).AsTask();
 
+#if !UNITY_EDITOR && !UNITY_WEBGL
         [Test]
         public Task CryptoFileAccessor_TamperedFile_ThrowsCryptographicException() =>
             LocalPrefsTest.CryptoFileAccessor_TamperedFile_ThrowsCryptographicException(LocalPrefsTest.TestFilePath).AsTask();
+#endif
     }
 }
