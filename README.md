@@ -113,7 +113,9 @@ The factory method `FileAccessor.Create(in string path)` provides a default impl
 
 ## Encryption
 `CryptoFileAccessor` is a general-purpose implementation that enables encrypted saving and decrypted loading.
-It can be passed to a `JsonLocalPrefs` instance as shown below:
+It uses **AES-GCM** authenticated encryption with a fresh random nonce per write, providing both confidentiality and integrity in a single pass — no separate HMAC step is required.
+
+> **Note:** `CryptoFileAccessor` is **not supported on Unity** because Unity's Mono runtime does not implement `System.Security.Cryptography.AesGcm` (see [mono/mono#19285](https://github.com/mono/mono/issues/19285)). Use it only in standard .NET environments (e.g., server-side, desktop standalone builds).
 
 ```csharp
 using AndanteTribe.IO;
@@ -128,13 +130,8 @@ byte[] key = {
     0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20
 };
 
-public static readonly byte[] iv = {
-    0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28,
-    0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, 0x30
-};
-
-// Set CryptoFileAccessor
-ILocalPrefs prefs = new JsonLocalPrefs(new CryptoFileAccessor(path, key, iv));
+// Set CryptoFileAccessor — a random nonce is generated and stored on each write
+ILocalPrefs prefs = new JsonLocalPrefs(new CryptoFileAccessor(path, key));
 
 // Save
 await prefs.SaveAsync("intkey", 123);

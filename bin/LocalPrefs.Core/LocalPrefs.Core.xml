@@ -6,49 +6,38 @@
     <members>
         <member name="T:AndanteTribe.IO.CryptoFileAccessor">
             <summary>
-            A file accessor that encrypts and decrypts file content using AES encryption.
-            Implements the decorator pattern by wrapping another FileAccessor instance.
+            A file accessor that encrypts and decrypts file content using AES-GCM authenticated encryption.
+            Implements the decorator pattern by wrapping another <see cref="T:AndanteTribe.IO.FileAccessor"/> instance.
             </summary>
-            <param name="fileAccessor">The underlying file accessor to be decorated with encryption.</param>
-            <param name="key">The encryption key used for AES encryption.</param>
-            <param name="iv">The initialization vector used for AES encryption.</param>
-            <param name="mode">The cipher mode to use for AES encryption. Defaults to CBC.</param>
-        </member>
-        <member name="M:AndanteTribe.IO.CryptoFileAccessor.#ctor(AndanteTribe.IO.FileAccessor,System.Byte[],System.Byte[],System.Security.Cryptography.CipherMode)">
-            <summary>
-            A file accessor that encrypts and decrypts file content using AES encryption.
-            Implements the decorator pattern by wrapping another FileAccessor instance.
-            </summary>
-            <param name="fileAccessor">The underlying file accessor to be decorated with encryption.</param>
-            <param name="key">The encryption key used for AES encryption.</param>
-            <param name="iv">The initialization vector used for AES encryption.</param>
-            <param name="mode">The cipher mode to use for AES encryption. Defaults to CBC.</param>
+            <remarks>
+            The on-disk format is: <c>[nonce (12 bytes)][authentication tag (16 bytes)][AES-GCM ciphertext]</c>.
+            A fresh random nonce is generated for every write, providing semantic security so that the same
+            plaintext never produces the same ciphertext twice. AES-GCM provides both confidentiality and
+            integrity/authenticity in a single pass; any tampering is detected before plaintext is returned
+            (a <see cref="T:System.Security.Cryptography.CryptographicException"/> is thrown when authentication fails).
+            <para>
+            <strong>Unity / Mono:</strong> <see cref="T:System.Security.Cryptography.AesGcm"/> is not supported on Unity's Mono runtime
+            (see <see href="https://github.com/mono/mono/issues/19285"/>). Do not use
+            <see cref="T:AndanteTribe.IO.CryptoFileAccessor"/> in Unity projects.
+            </para>
+            </remarks>
         </member>
         <member name="P:AndanteTribe.IO.CryptoFileAccessor.SavePath">
             <inheritdoc />
         </member>
         <member name="M:AndanteTribe.IO.CryptoFileAccessor.#ctor(AndanteTribe.IO.FileAccessor,System.Byte[])">
             <summary>
-            The underlying file accessor that performs actual file operations.
+            Initializes a new instance of the <see cref="T:AndanteTribe.IO.CryptoFileAccessor"/> class.
             </summary>
-            <param name="fileAccessor">FileAccessor to be decorated with encryption.</param>
-            <param name="key">Encryption key used for AES encryption.</param>
+            <param name="fileAccessor">The underlying file accessor to be decorated with encryption.</param>
+            <param name="key">The encryption key used for AES-GCM. Must be 128, 192, or 256 bits (16, 24, or 32 bytes).</param>
         </member>
-        <member name="M:AndanteTribe.IO.CryptoFileAccessor.#ctor(System.String@,System.Byte[],System.Byte[],System.Security.Cryptography.CipherMode)">
+        <member name="M:AndanteTribe.IO.CryptoFileAccessor.#ctor(System.String@,System.Byte[])">
             <summary>
             Initializes a new instance of the <see cref="T:AndanteTribe.IO.CryptoFileAccessor"/> class with a specified file path.
             </summary>
             <param name="path">Path to the file where preference data will be stored.</param>
-            <param name="key">Encryption key used for AES encryption.</param>
-            <param name="iv">Initialization vector used for AES encryption.</param>
-            <param name="mode">Cipher mode to use for AES encryption. Defaults to CBC.</param>
-        </member>
-        <member name="M:AndanteTribe.IO.CryptoFileAccessor.#ctor(System.String@,System.Byte[])">
-            <summary>
-            Initializes a new instance of the <see cref="T:AndanteTribe.IO.CryptoFileAccessor"/> class with a specified file path and encryption key.
-            </summary>
-            <param name="path">Path to the file where preference data will be stored.</param>
-            <param name="key">Encryption key used for AES encryption.</param>
+            <param name="key">The encryption key used for AES-GCM. Must be 128, 192, or 256 bits (16, 24, or 32 bytes).</param>
         </member>
         <member name="M:AndanteTribe.IO.CryptoFileAccessor.ReadAllBytes">
             <inheritdoc />
@@ -58,12 +47,6 @@
         </member>
         <member name="M:AndanteTribe.IO.CryptoFileAccessor.DeleteAsync(System.Threading.CancellationToken)">
             <inheritdoc />
-        </member>
-        <member name="M:AndanteTribe.IO.CryptoFileAccessor.CreateAes">
-            <summary>
-            Creates an AES algorithm instance with the provided key, IV, and cipher mode.
-            </summary>
-            <returns>A configured AES algorithm instance.</returns>
         </member>
         <member name="T:AndanteTribe.IO.FileAccessor">
             <summary>
