@@ -96,7 +96,7 @@ public class CryptoFileAccessor : FileAccessor
         }
         finally
         {
-            ArrayPool<byte>.Shared.Return(buffer, clearArray: true);
+            ArrayPool<byte>.Shared.Return(buffer);
         }
     }
 
