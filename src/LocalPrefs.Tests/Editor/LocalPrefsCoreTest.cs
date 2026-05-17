@@ -15,10 +15,10 @@ namespace AndanteTribe.IO.Tests
         {
             () => new JsonLocalPrefs(LocalPrefsTest.TestFilePath),
             () => new MessagePackLocalPrefs(LocalPrefsTest.TestFilePath),
-            () => new JsonLocalPrefs(new CryptoFileAccessor(LocalPrefsTest.TestFilePath, LocalPrefsTest.TestKey, LocalPrefsTest.TestIv)),
-            () => new MessagePackLocalPrefs(new CryptoFileAccessor(LocalPrefsTest.TestFilePath, LocalPrefsTest.TestKey, LocalPrefsTest.TestIv)),
+#if !UNITY_EDITOR && !UNITY_WEBGL
             () => new JsonLocalPrefs(new CryptoFileAccessor(LocalPrefsTest.TestFilePath, LocalPrefsTest.TestKey)),
             () => new MessagePackLocalPrefs(new CryptoFileAccessor(LocalPrefsTest.TestFilePath, LocalPrefsTest.TestKey)),
+#endif
         };
 
         [SetUp]
@@ -29,21 +29,9 @@ namespace AndanteTribe.IO.Tests
         [TearDown]
         public void TearDown()
         {
-            // 通常のテストファイルを削除
             if (File.Exists(LocalPrefsTest.TestFilePath))
             {
                 File.Delete(LocalPrefsTest.TestFilePath);
-            }
-
-            // 暗号化されたテストファイルも削除
-            if (File.Exists(LocalPrefsTest.TestFilePath + ".crypto.cbc"))
-            {
-                File.Delete(LocalPrefsTest.TestFilePath + ".crypto.cbc");
-            }
-
-            if (File.Exists(LocalPrefsTest.TestFilePath + ".crypto.ecb"))
-            {
-                File.Delete(LocalPrefsTest.TestFilePath + ".crypto.ecb");
             }
         }
 
@@ -127,5 +115,11 @@ namespace AndanteTribe.IO.Tests
         [TestCaseSource(nameof(s_factories))]
         public Task AddAndRemoveMultipleTimes(Func<ILocalPrefs> factory)=>
             LocalPrefsTest.AddAndRemoveMultipleTimes(factory).AsTask();
+
+#if !UNITY_EDITOR && !UNITY_WEBGL
+        [Test]
+        public Task CryptoFileAccessor_TamperedFile_ThrowsCryptographicException() =>
+            LocalPrefsTest.CryptoFileAccessor_TamperedFile_ThrowsCryptographicException(LocalPrefsTest.TestFilePath).AsTask();
+#endif
     }
 }

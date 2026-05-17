@@ -2,6 +2,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
@@ -19,11 +21,6 @@ namespace AndanteTribe.IO.Tests
             0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10,
             0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
             0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20
-        };
-
-        public static readonly byte[] TestIv = {
-            0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28,
-            0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, 0x30
         };
 
 #if UNITY_EDITOR || UNITY_WEBGL
@@ -232,6 +229,39 @@ namespace AndanteTribe.IO.Tests
             {
                 Assert.That(prefs.Load<int>($"key{i}"), Is.EqualTo(0));
             }
+        }
+
+        public static async ValueTask CryptoFileAccessor_TamperedFile_ThrowsCryptographicException(string filePath)
+        {
+            const int nonceSize = 12; // AES-GCM nonce length
+            const int tagSize = 16;   // AES-GCM tag length
+
+            // Write a valid encrypted value and save the original bytes for isolated sub-tests
+            var accessor = new CryptoFileAccessor(filePath, TestKey);
+            await accessor.WriteAsync(new byte[] { 0x01, 0x02, 0x03, 0x04 });
+            var validBytes = File.ReadAllBytes(filePath);
+
+            // 1. Corrupt the first byte of the ciphertext body (after nonce + tag)
+            var tampered = (byte[])validBytes.Clone();
+            tampered[nonceSize + tagSize] ^= 0xFF;
+            File.WriteAllBytes(filePath, tampered);
+            Assert.That(() => accessor.ReadAllBytes(), Throws.InstanceOf<CryptographicException>());
+
+            // 2. Corrupt the first byte of the authentication tag
+            tampered = (byte[])validBytes.Clone();
+            tampered[nonceSize] ^= 0xFF;  // tag immediately follows the nonce
+            File.WriteAllBytes(filePath, tampered);
+            Assert.That(() => accessor.ReadAllBytes(), Throws.InstanceOf<CryptographicException>());
+
+            // 3. Corrupt the first byte of the nonce
+            tampered = (byte[])validBytes.Clone();
+            tampered[0] ^= 0xFF;
+            File.WriteAllBytes(filePath, tampered);
+            Assert.That(() => accessor.ReadAllBytes(), Throws.InstanceOf<CryptographicException>());
+
+            // 4. File too short to contain nonce + tag — length check before any decryption
+            File.WriteAllBytes(filePath, new byte[] { 0x01, 0x02, 0x03 });
+            Assert.That(() => accessor.ReadAllBytes(), Throws.InstanceOf<CryptographicException>());
         }
     }
 }
