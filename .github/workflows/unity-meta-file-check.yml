@@ -12,6 +12,9 @@ on:
       - src/LocalPrefs.Unity/Packages/**
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+
 jobs:
   meta-check:
     runs-on: ubuntu-latest
