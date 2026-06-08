@@ -11,8 +11,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      # ghasec-ignore: unpinned-action
+      - uses: AndanteTribe/Actions/actions/checkout@main # zizmor: ignore[unpinned-uses] repository-local action reference is intentionally tracked on @main
+      # ghasec-ignore: unpinned-action
+      - uses: AndanteTribe/Actions/actions/setup-dotnet@main # zizmor: ignore[unpinned-uses] repository-local action reference is intentionally tracked on @main
         with:
           dotnet-version: 9.0.x
       - name: Restore
