@@ -7,7 +7,7 @@ on:
         type: string
         required: true
         default: "0.0.0"
-        
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -20,7 +20,8 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    # ghasec-ignore: unpinned-action
+    - uses: AndanteTribe/Actions/actions/checkout@main # zizmor: ignore[unpinned-uses] repository-local action reference is intentionally tracked on @main
       with:
         fetch-depth: 0
     - name: create branch
@@ -65,7 +66,8 @@ jobs:
             echo "Updating $FILE"
             sed -i -E "s|<Version>.*</Version>|<Version>${VERSION}</Version>|" "$FILE"
           done
-    - uses: actions/setup-dotnet@v4
+    # ghasec-ignore: unpinned-action
+    - uses: AndanteTribe/Actions/actions/setup-dotnet@main # zizmor: ignore[unpinned-uses] repository-local action reference is intentionally tracked on @main
       with:
         dotnet-version: 9.0.x
     - run: |
@@ -74,7 +76,7 @@ jobs:
     - name: commit and push
       run: |
           VERSION="${{ github.event.inputs.version }}"
-          
+
           git add \
             ./bin/LocalPrefs.Core/package.json \
             ./bin/LocalPrefs.Core/LocalPrefs.Core.dll \
@@ -98,7 +100,7 @@ jobs:
       run: |
         VERSION="${{ github.event.inputs.version }}"
         BRANCH="feature/v$VERSION"
-    
+
         gh pr create \
           --base main \
           --head "$BRANCH" \
