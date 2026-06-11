@@ -25,8 +25,11 @@ jobs:
       with:
         fetch-depth: 0
     - name: create branch
+      env:
+          GITHUB_TOKEN: ${{ github.token }}
       run: |
           BRANCH="feature/v${{ github.event.inputs.version }}"
+          AUTH_REMOTE="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           echo "Creating branch: $BRANCH"
 
           git config user.name "github-actions"
@@ -34,7 +37,7 @@ jobs:
 
           git fetch origin
           git checkout -b "$BRANCH" origin/main
-          git push origin "$BRANCH"
+          git push "$AUTH_REMOTE" "$BRANCH"
     - name: update version (unity)
       run: |
           VERSION="${{ github.event.inputs.version }}"
@@ -74,8 +77,12 @@ jobs:
         dotnet restore ./src/LocalPrefs/LocalPrefs.slnx
         dotnet build ./src/LocalPrefs/LocalPrefs.slnx --configuration Release --no-restore
     - name: commit and push
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
       run: |
           VERSION="${{ github.event.inputs.version }}"
+          BRANCH="feature/v${VERSION}"
+          AUTH_REMOTE="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
 
           git add \
             ./bin/LocalPrefs.Core/package.json \
@@ -92,7 +99,7 @@ jobs:
             ./src/LocalPrefs.MessagePack/LocalPrefs.MessagePack.csproj \
             ./src/LocalPrefs/LocalPrefs.csproj
           git commit -m "chore: bump version to ${VERSION}"
-          git push origin HEAD
+          git push "$AUTH_REMOTE" "HEAD:${BRANCH}"
     - name: create pull request
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
