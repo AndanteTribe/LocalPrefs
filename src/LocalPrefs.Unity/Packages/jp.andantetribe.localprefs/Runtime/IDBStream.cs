@@ -1,4 +1,4 @@
-﻿#if UNITY_WEBGL
+#if UNITY_WEBGL
 #nullable enable
 
 using System;
@@ -11,12 +11,18 @@ namespace AndanteTribe.IO.Unity
     /// <summary>
     /// Represents a stream for IndexedDB operations.
     /// </summary>
-    /// <remarks>No multi-threading support because multi-threading is not allowed in the WebGL environment.</remarks>
+    /// <remarks>
+    /// No multi-threading support because multi-threading is not allowed in the WebGL environment.
+    /// Writes are buffered until <see cref="FlushAsync(CancellationToken)"/> or <see cref="DisposeAsync"/> is called.
+    /// </remarks>
     public class IDBStream : Stream
     {
         private readonly string _path;
         private byte[] _buffer = Array.Empty<byte>();
         private int _written;
+        private int _writeVersion;
+        private bool _isDirty;
+        private bool _isDisposed;
 
         /// <inheritdoc />
         public override bool CanRead => true;
@@ -46,7 +52,59 @@ namespace AndanteTribe.IO.Unity
         /// <inheritdoc />
         public override void Flush()
         {
-            // Flush is typically implemented as an empty method to ensure full compatibility with other Stream types.
+            ThrowIfDisposed();
+            if (_isDirty)
+            {
+                throw new NotSupportedException("Synchronous Flush is not supported in WebGL. Use FlushAsync instead.");
+            }
+        }
+
+        /// <inheritdoc />
+        public override async Task FlushAsync(CancellationToken cancellationToken)
+        {
+            ThrowIfDisposed();
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!_isDirty)
+            {
+                return;
+            }
+
+            var flushedVersion = _writeVersion;
+            await IDBUtils.WriteAllBytesAsync(_path, new ReadOnlyMemory<byte>(_buffer, 0, _written), cancellationToken);
+            if (_writeVersion == flushedVersion)
+            {
+                _isDirty = false;
+            }
+        }
+
+        /// <inheritdoc />
+        public override async ValueTask DisposeAsync()
+        {
+            if (_isDisposed)
+            {
+                return;
+            }
+
+            await FlushAsync(CancellationToken.None);
+            Dispose();
+            GC.SuppressFinalize(this);
+        }
+
+        /// <inheritdoc />
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && !_isDisposed)
+            {
+                if (_isDirty)
+                {
+                    throw new InvalidOperationException("The stream has buffered data. Use DisposeAsync to persist it to IndexedDB.");
+                }
+
+                _buffer = Array.Empty<byte>();
+                _isDisposed = true;
+            }
+
+            base.Dispose(disposing);
         }
 
         /// <inheritdoc />
@@ -91,7 +149,7 @@ namespace AndanteTribe.IO.Unity
         {
             cancellationToken.ThrowIfCancellationRequested();
             WriteBuffer(new ReadOnlySpan<byte>(buffer, offset, count));
-            return IDBUtils.WriteAllBytesAsync(_path, new ReadOnlyMemory<byte>(_buffer, 0, _written), cancellationToken).AsTask();
+            return Task.CompletedTask;
         }
 
         /// <inheritdoc />
@@ -99,18 +157,37 @@ namespace AndanteTribe.IO.Unity
         {
             cancellationToken.ThrowIfCancellationRequested();
             WriteBuffer(buffer.Span);
-            return IDBUtils.WriteAllBytesAsync(_path, new ReadOnlyMemory<byte>(_buffer, 0, _written), cancellationToken);
+            return default;
         }
 
         private void WriteBuffer(in ReadOnlySpan<byte> value)
         {
-            if (_buffer.Length < _written + value.Length)
+            ThrowIfDisposed();
+            if (value.IsEmpty)
             {
-                Array.Resize(ref _buffer, _written + value.Length);
+                return;
+            }
+
+            var requiredLength = checked(_written + value.Length);
+            if (_buffer.Length < requiredLength)
+            {
+                var doubledLength = _buffer.Length > int.MaxValue / 2 ? int.MaxValue : _buffer.Length * 2;
+                var newLength = _buffer.Length == 0 ? requiredLength : Math.Max(requiredLength, doubledLength);
+                Array.Resize(ref _buffer, newLength);
             }
 
             value.CopyTo(_buffer.AsSpan()[_written..]);
             _written += value.Length;
+            _writeVersion++;
+            _isDirty = true;
+        }
+
+        private void ThrowIfDisposed()
+        {
+            if (_isDisposed)
+            {
+                throw new ObjectDisposedException(nameof(IDBStream));
+            }
         }
     }
 }

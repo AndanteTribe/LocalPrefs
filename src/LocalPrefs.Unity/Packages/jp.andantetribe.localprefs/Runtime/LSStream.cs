@@ -1,4 +1,4 @@
-﻿#if UNITY_WEBGL
+#if UNITY_WEBGL
 #nullable enable
 
 using System;
@@ -12,11 +12,14 @@ namespace AndanteTribe.IO.Unity
     /// <summary>
     /// Represents a stream that reads from and writes to Local Storage in WebGL builds.
     /// </summary>
+    /// <remarks>Writes are buffered until <see cref="Flush"/> or <see cref="Dispose()"/> is called.</remarks>
     public class LSStream : Stream
     {
         private readonly string _path;
         private NativeArray<byte> _buffer;
         private int _written;
+        private bool _isDirty;
+        private bool _isDisposed;
 
         /// <inheritdoc />
         public override bool CanRead => true;
@@ -46,9 +49,20 @@ namespace AndanteTribe.IO.Unity
         /// <inheritdoc />
         protected override void Dispose(bool disposing)
         {
-            if (_buffer.IsCreated)
+            if (disposing && !_isDisposed)
             {
-                _buffer.Dispose();
+                try
+                {
+                    Flush();
+                }
+                finally
+                {
+                    if (_buffer.IsCreated)
+                    {
+                        _buffer.Dispose();
+                    }
+                    _isDisposed = true;
+                }
             }
             base.Dispose(disposing);
         }
@@ -56,7 +70,14 @@ namespace AndanteTribe.IO.Unity
         /// <inheritdoc />
         public override void Flush()
         {
-            // Flush is typically implemented as an empty method to ensure full compatibility with other Stream types.
+            ThrowIfDisposed();
+            if (!_isDirty)
+            {
+                return;
+            }
+
+            LSUtils.WriteAllBytes(_path, _buffer.AsSpan()[.._written]);
+            _isDirty = false;
         }
 
         /// <inheritdoc />
@@ -103,7 +124,7 @@ namespace AndanteTribe.IO.Unity
 
         /// <inheritdoc />
         public override void Write(byte[] buffer, int offset, int count) =>
-            LSUtils.WriteAllBytes(_path, WriteBuffer(new ReadOnlySpan<byte>(buffer, offset, count)));
+            WriteBuffer(new ReadOnlySpan<byte>(buffer, offset, count));
 
         /// <inheritdoc />
         public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
@@ -117,22 +138,27 @@ namespace AndanteTribe.IO.Unity
         public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            LSUtils.WriteAllBytes(_path, WriteBuffer(buffer.Span));
+            WriteBuffer(buffer.Span);
             return default;
         }
 
-        private ReadOnlySpan<byte> WriteBuffer(in ReadOnlySpan<byte> value)
+        private void WriteBuffer(in ReadOnlySpan<byte> value)
         {
-            if (!_buffer.IsCreated && _buffer.Length != 0)
+            ThrowIfDisposed();
+            if (value.IsEmpty)
             {
-                throw new ObjectDisposedException(nameof(LSStream));
+                return;
             }
-            if (_buffer.Length < _written + value.Length)
+
+            var requiredLength = checked(_written + value.Length);
+            if (_buffer.Length < requiredLength)
             {
-                var newBuffer = new NativeArray<byte>(_written + value.Length, Allocator.Persistent);
-                if (_buffer.Length != 0)
+                var doubledLength = _buffer.Length > int.MaxValue / 2 ? int.MaxValue : _buffer.Length * 2;
+                var newLength = _buffer.Length == 0 ? requiredLength : Math.Max(requiredLength, doubledLength);
+                var newBuffer = new NativeArray<byte>(newLength, Allocator.Persistent);
+                if (_written != 0)
                 {
-                    _buffer.CopyTo(newBuffer);
+                    _buffer.AsSpan()[.._written].CopyTo(newBuffer.AsSpan());
                     _buffer.Dispose();
                 }
                 _buffer = newBuffer;
@@ -140,7 +166,15 @@ namespace AndanteTribe.IO.Unity
 
             value.CopyTo(_buffer.AsSpan()[_written..]);
             _written += value.Length;
-            return _buffer.AsSpan()[.._written];
+            _isDirty = true;
+        }
+
+        private void ThrowIfDisposed()
+        {
+            if (_isDisposed)
+            {
+                throw new ObjectDisposedException(nameof(LSStream));
+            }
         }
     }
 }
