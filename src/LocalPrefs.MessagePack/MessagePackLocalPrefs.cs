@@ -1,6 +1,6 @@
-﻿using MessagePack;
-using MessagePack.Formatters;
 using AndanteTribe.IO.Internal;
+using MessagePack;
+using MessagePack.Formatters;
 
 namespace AndanteTribe.IO.MessagePack;
 
@@ -182,7 +182,7 @@ public class MessagePackLocalPrefs : ILocalPrefs
 
         using (var scope = _writer.GetWriteBlockScope(0, _headerSize))
         {
-            MessagePackSerializer.Serialize(_header, HeaderFormatterResolver.StandardOptions, cancellationToken);
+            MessagePackSerializer.Serialize(_writer, _header, HeaderFormatterResolver.StandardOptions, cancellationToken);
             _headerSize = scope.Consumed;
         }
 

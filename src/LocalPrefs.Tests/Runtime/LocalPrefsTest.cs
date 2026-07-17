@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -206,6 +206,20 @@ namespace AndanteTribe.IO.Tests
             await prefs.SaveAsync("c", 3);
             await prefs.DeleteAsync("b");
 
+            Assert.That(prefs.Load<int>("a"), Is.EqualTo(1));
+            Assert.That(prefs.Load<int>("b"), Is.EqualTo(0));
+            Assert.That(prefs.Load<int>("c"), Is.EqualTo(3));
+        }
+
+        public static async ValueTask Delete_SecondElement_OtherInstance_PreservesRemainingValues(Func<ILocalPrefs> factory)
+        {
+            var prefs = factory();
+            await prefs.SaveAsync("a", 1);
+            await prefs.SaveAsync("b", 2);
+            await prefs.SaveAsync("c", 3);
+            await prefs.DeleteAsync("b");
+
+            prefs = factory();
             Assert.That(prefs.Load<int>("a"), Is.EqualTo(1));
             Assert.That(prefs.Load<int>("b"), Is.EqualTo(0));
             Assert.That(prefs.Load<int>("c"), Is.EqualTo(3));
