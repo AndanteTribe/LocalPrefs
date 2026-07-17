@@ -223,5 +223,17 @@ public static byte[] ReadAllBytes(in string path);
 public static string ReadAllText(in string path);
 ```
 
+#### Building the Rust native plugin
+
+On WebGL, an Emscripten Rust static library owns the browser storage integration. The Rust project is located at `src/local_prefs_native`, and `csbindgen` generates `LocalPrefsNative.g.cs`. The minimal JavaScript required to call Local Storage and IndexedDB is embedded in the Rust library and executed through Emscripten, so the Unity package does not require hand-written `.jslib` files.
+
+On Windows with Rustup and WebGL Build Support for the project's Unity version installed, run:
+
+```powershell
+./src/local_prefs_native/Build-Rust.ps1
+```
+
+The script detects the Unity version, installs the nightly `rust-src` component and `wasm32-unknown-emscripten` target, builds with `RUSTFLAGS=-Ctarget-cpu=mvp` and `build-std`, then places `liblocal_prefs_native.a` in the Unity package's `Plugins/WebGL` directory. Pass `-UnityEditorPath` when Unity is installed outside its standard location.
+
 ## License
 This library is released under the MIT license.

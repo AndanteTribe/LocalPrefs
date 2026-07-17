@@ -1,4 +1,4 @@
-﻿#if UNITY_WEBGL
+#if UNITY_WEBGL
 #nullable enable
 
 using System;
@@ -15,6 +15,13 @@ namespace AndanteTribe.IO.Unity
     /// </summary>
     public static class IDBUtils
     {
+        private static readonly NonLoadSuccessCallbackDelegate s_nonLoadSuccessCallback = NonLoadSuccessCallback;
+        private static readonly LoadSuccessCallbackDelegate s_loadSuccessCallback = LoadSuccessCallback;
+        private static readonly ErrorCallbackDelegate s_errorCallback = ErrorCallback;
+        private static readonly IntPtr s_nonLoadSuccessCallbackPointer = Marshal.GetFunctionPointerForDelegate(s_nonLoadSuccessCallback);
+        private static readonly IntPtr s_loadSuccessCallbackPointer = Marshal.GetFunctionPointerForDelegate(s_loadSuccessCallback);
+        private static readonly IntPtr s_errorCallbackPointer = Marshal.GetFunctionPointerForDelegate(s_errorCallback);
+
         /// <summary>
         /// Asynchronously writes the specified byte array to IndexedDB using the specified path as key.
         /// If the path already exists in IndexedDB, it is overwritten.
@@ -32,7 +39,13 @@ namespace AndanteTribe.IO.Unity
                 ((IDBValueTaskSource)s).SetCanceled();
             }, source);
 
-            SaveToIndexedDB(source.Handle, path, bytes, bytes.Length, NonLoadSuccessCallback, ErrorCallback);
+            LocalPrefsNativeInterop.SaveToIndexedDB(
+                source.Handle,
+                path,
+                bytes,
+                bytes.Length,
+                s_nonLoadSuccessCallbackPointer,
+                s_errorCallbackPointer);
             await new ValueTask(source, source.Version);
         }
 
@@ -57,7 +70,13 @@ namespace AndanteTribe.IO.Unity
             {
                 fixed (byte* dataPtr = bytes.Span)
                 {
-                    SaveToIndexedDB(source.Handle, path, new IntPtr(dataPtr), bytes.Length, NonLoadSuccessCallback, ErrorCallback);
+                    LocalPrefsNativeInterop.SaveToIndexedDB(
+                        source.Handle,
+                        path,
+                        new IntPtr(dataPtr),
+                        bytes.Length,
+                        s_nonLoadSuccessCallbackPointer,
+                        s_errorCallbackPointer);
                 }
             }
 
@@ -79,7 +98,11 @@ namespace AndanteTribe.IO.Unity
                 ((IDBValueTaskSource)s).SetCanceled();
             }, source);
 
-            DeleteFromIndexedDB(source.Handle, path, NonLoadSuccessCallback, ErrorCallback);
+            LocalPrefsNativeInterop.DeleteFromIndexedDB(
+                source.Handle,
+                path,
+                s_nonLoadSuccessCallbackPointer,
+                s_errorCallbackPointer);
             await new ValueTask(source, source.Version);
         }
 
@@ -98,23 +121,18 @@ namespace AndanteTribe.IO.Unity
                 ((IDBValueTaskSource)s).SetCanceled();
             }, source);
 
-            LoadFromIndexedDB(source.Handle, path, LoadSuccessCallback, ErrorCallback);
+            LoadFromIndexedDB(source, path);
             return (await new ValueTask<(byte[] array, int _)>(source, source.Version)).array;
         }
 
-        [DllImport("__Internal")]
-        private static extern void SaveToIndexedDB(IntPtr state, string key, byte[] data, int dataSize, Action<IntPtr> success, Action<IntPtr, string> error);
+        internal static void LoadFromIndexedDB(IDBValueTaskSource source, string path) =>
+            LocalPrefsNativeInterop.LoadFromIndexedDB(
+                source.Handle,
+                path,
+                s_loadSuccessCallbackPointer,
+                s_errorCallbackPointer);
 
-        [DllImport("__Internal")]
-        private static extern void SaveToIndexedDB(IntPtr state, string key, IntPtr data, int dataSize, Action<IntPtr> success, Action<IntPtr, string> error);
-
-        [DllImport("__Internal")]
-        private static extern void DeleteFromIndexedDB(IntPtr state, string key, Action<IntPtr> success, Action<IntPtr, string> error);
-
-        [DllImport("__Internal")]
-        internal static extern void LoadFromIndexedDB(IntPtr state, string key, Action<IntPtr, IntPtr, int> success, Action<IntPtr, string> error);
-
-        [MonoPInvokeCallback(typeof(Action<IntPtr>))]
+        [MonoPInvokeCallback(typeof(NonLoadSuccessCallbackDelegate))]
         private static void NonLoadSuccessCallback(IntPtr state)
         {
             var handle = GCHandle.FromIntPtr(state);
@@ -122,21 +140,31 @@ namespace AndanteTribe.IO.Unity
             source.SetResult();
         }
 
-        [MonoPInvokeCallback(typeof(Action<IntPtr, IntPtr, int>))]
-        internal static void LoadSuccessCallback(IntPtr state, IntPtr dataPtr, int length)
+        [MonoPInvokeCallback(typeof(LoadSuccessCallbackDelegate))]
+        private static void LoadSuccessCallback(IntPtr state, IntPtr dataPtr, int length)
         {
             var handle = GCHandle.FromIntPtr(state);
             var source = (IDBValueTaskSource)handle.Target;
             source.SetResult(dataPtr, length);
         }
 
-        [MonoPInvokeCallback(typeof(Action<IntPtr, string>))]
-        internal static void ErrorCallback(IntPtr state, string message)
+        [MonoPInvokeCallback(typeof(ErrorCallbackDelegate))]
+        private static void ErrorCallback(IntPtr state, IntPtr messagePointer)
         {
             var handle = GCHandle.FromIntPtr(state);
             var source = (IDBValueTaskSource)handle.Target;
+            var message = Marshal.PtrToStringUTF8(messagePointer) ?? "IndexedDB operation failed.";
             source.SetException(new Exception(message));
         }
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void NonLoadSuccessCallbackDelegate(IntPtr state);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void LoadSuccessCallbackDelegate(IntPtr state, IntPtr dataPointer, int length);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void ErrorCallbackDelegate(IntPtr state, IntPtr messagePointer);
     }
 }
 

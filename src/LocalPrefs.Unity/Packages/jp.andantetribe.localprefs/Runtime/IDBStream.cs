@@ -1,4 +1,4 @@
-﻿#if UNITY_WEBGL
+#if UNITY_WEBGL
 #nullable enable
 
 using System;
@@ -68,7 +68,7 @@ namespace AndanteTribe.IO.Unity
                 ((IDBValueTaskSource)s).SetCanceled();
             }, source);
 
-            IDBUtils.LoadFromIndexedDB(source.Handle, _path, IDBUtils.LoadSuccessCallback, IDBUtils.ErrorCallback);
+            IDBUtils.LoadFromIndexedDB(source, _path);
             return (await new ValueTask<(byte[] _, int size)>(source, source.Version)).size;
         }
 

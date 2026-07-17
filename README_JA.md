@@ -207,5 +207,18 @@ public static byte[] ReadAllBytes(in string path);
 
 public static string ReadAllText(in string path);
 ```
+
+#### Rust ネイティブプラグインのビルド
+
+WebGL では Rust の Emscripten 静的ライブラリがブラウザストレージ連携を担当します。Rust プロジェクトは `src/local_prefs_native` にあり、`csbindgen` が `LocalPrefsNative.g.cs` を生成します。Local Storage と IndexedDB を呼ぶために必要な最小限の JavaScript は Rust ライブラリへ埋め込まれるため、Unity パッケージに手書きの `.jslib` は不要です。
+
+Rustup と対象 Unity バージョンの WebGL Build Support を導入した Windows 環境で、次のコマンドを実行してください。
+
+```powershell
+./src/local_prefs_native/Build-Rust.ps1
+```
+
+スクリプトはプロジェクトの Unity バージョンを検出し、nightly の `rust-src` と `wasm32-unknown-emscripten` ターゲットを用意したうえで、`RUSTFLAGS=-Ctarget-cpu=mvp` と `build-std` を使ってビルドします。生成した `liblocal_prefs_native.a` は Unity パッケージの `Plugins/WebGL` に配置されます。Unity を標準以外の場所へ導入している場合は `-UnityEditorPath` を指定できます。
+
 ### ライセンス
 このライブラリは、MITライセンスで公開しています。
