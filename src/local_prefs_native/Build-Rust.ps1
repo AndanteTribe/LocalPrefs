@@ -37,25 +37,20 @@ try {
         (Join-Path $emscriptenRoot "llvm") + ";" + $env:PATH
     $env:RUSTFLAGS = "-Ctarget-cpu=mvp"
 
-    rustup component add rust-src --toolchain nightly
-    if ($LASTEXITCODE -ne 0) {
-        throw "Installing the nightly rust-src component failed with exit code $LASTEXITCODE."
+    Push-Location $PSScriptRoot
+    try {
+        cargo build `
+            -Z build-std=panic_abort,std `
+            --target wasm32-unknown-emscripten `
+            --release `
+            --lib
+
+        if ($LASTEXITCODE -ne 0) {
+            throw "The Rust WebGL build failed with exit code $LASTEXITCODE."
+        }
     }
-
-    rustup target add wasm32-unknown-emscripten --toolchain nightly
-    if ($LASTEXITCODE -ne 0) {
-        throw "Installing the wasm32-unknown-emscripten target failed with exit code $LASTEXITCODE."
-    }
-
-    cargo +nightly build `
-        -Z build-std=panic_abort,std `
-        --target wasm32-unknown-emscripten `
-        --release `
-        --lib `
-        --manifest-path (Join-Path $PSScriptRoot "Cargo.toml")
-
-    if ($LASTEXITCODE -ne 0) {
-        throw "The Rust WebGL build failed with exit code $LASTEXITCODE."
+    finally {
+        Pop-Location
     }
 
     $sourcePath = Join-Path $PSScriptRoot "target\wasm32-unknown-emscripten\release\liblocal_prefs_native.a"

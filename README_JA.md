@@ -218,7 +218,7 @@ Rustup と対象 Unity バージョンの WebGL Build Support を導入した Wi
 ./src/local_prefs_native/Build-Rust.ps1
 ```
 
-スクリプトはプロジェクトの Unity バージョンを検出し、nightly の `rust-src` と `wasm32-unknown-emscripten` ターゲットを用意したうえで、`RUSTFLAGS=-Ctarget-cpu=mvp` と `build-std` を使ってビルドします。生成した `liblocal_prefs_native.a` は Unity パッケージの `Plugins/WebGL` に配置されます。Unity を標準以外の場所へ導入している場合は `-UnityEditorPath` を指定できます。
+スクリプトはプロジェクトの Unity バージョンを検出し、`rust-toolchain.toml` で固定した toolchain、`rust-src`、`wasm32-unknown-emscripten` ターゲットを使います。`RUSTFLAGS=-Ctarget-cpu=mvp` と `build-std` でビルドし、生成した `liblocal_prefs_native.a` を Unity パッケージの `Plugins/WebGL` に配置します。固定した toolchain やコンポーネントがなければ Rustup が導入します。Unity を標準以外の場所へ導入している場合は `-UnityEditorPath` を指定できます。
 
 ### ライセンス
 このライブラリは、MITライセンスで公開しています。

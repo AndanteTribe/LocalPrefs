@@ -233,7 +233,7 @@ On Windows with Rustup and WebGL Build Support for the project's Unity version i
 ./src/local_prefs_native/Build-Rust.ps1
 ```
 
-The script detects the Unity version, installs the nightly `rust-src` component and `wasm32-unknown-emscripten` target, builds with `RUSTFLAGS=-Ctarget-cpu=mvp` and `build-std`, then places `liblocal_prefs_native.a` in the Unity package's `Plugins/WebGL` directory. Pass `-UnityEditorPath` when Unity is installed outside its standard location.
+The script detects the Unity version and uses the toolchain pinned by `rust-toolchain.toml`, including `rust-src` and the `wasm32-unknown-emscripten` target. It builds with `RUSTFLAGS=-Ctarget-cpu=mvp` and `build-std`, then places `liblocal_prefs_native.a` in the Unity package's `Plugins/WebGL` directory. Rustup installs the pinned toolchain and components when they are missing. Pass `-UnityEditorPath` when Unity is installed outside its standard location.
 
 ## License
 This library is released under the MIT license.
