@@ -1,4 +1,4 @@
-﻿#if UNITY_WEBGL
+#if UNITY_WEBGL
 #nullable enable
 
 using System;
@@ -108,6 +108,15 @@ namespace AndanteTribe.IO.Unity.Tests
         }
 
         [UnityTest]
+        public IEnumerator OverwriteValue_DifferentSize_PreservesFollowingValue([ValueSource(nameof(s_factories))] Func<ILocalPrefs> factory)
+        {
+            yield return new ToCoroutineEnumerator(async () =>
+            {
+                await LocalPrefsTest.OverwriteValue_DifferentSize_PreservesFollowingValue(factory);
+            });
+        }
+
+        [UnityTest]
         public IEnumerator HasKey_Works([ValueSource(nameof(s_factories))] Func<ILocalPrefs> factory)
         {
             yield return new ToCoroutineEnumerator(async () =>
@@ -189,6 +198,15 @@ namespace AndanteTribe.IO.Unity.Tests
             yield return new ToCoroutineEnumerator(async () =>
             {
                 await LocalPrefsTest.Delete_SecondElement(factory);
+            });
+        }
+
+        [UnityTest]
+        public IEnumerator Delete_SecondElement_OtherInstance_PreservesRemainingValues([ValueSource(nameof(s_factories))] Func<ILocalPrefs> factory)
+        {
+            yield return new ToCoroutineEnumerator(async () =>
+            {
+                await LocalPrefsTest.Delete_SecondElement_OtherInstance_PreservesRemainingValues(factory);
             });
         }
 

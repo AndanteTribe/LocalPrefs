@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -98,6 +98,30 @@ namespace AndanteTribe.IO.Tests
             var prefs3 = factory();
             var value = prefs3.Load<int>("key");
             Assert.That(value, Is.EqualTo(2));
+        }
+
+        public static async ValueTask OverwriteValue_DifferentSize_PreservesFollowingValue(Func<ILocalPrefs> factory)
+        {
+            var prefs = factory();
+            await prefs.SaveAsync("first", "short");
+            await prefs.SaveAsync("following", "must remain readable");
+
+            const string longValue = "a value long enough to change its serialized size";
+            await prefs.SaveAsync("first", longValue);
+            Assert.That(prefs.Load<string>("first"), Is.EqualTo(longValue));
+            Assert.That(prefs.Load<string>("following"), Is.EqualTo("must remain readable"));
+
+            prefs = factory();
+            Assert.That(prefs.Load<string>("first"), Is.EqualTo(longValue));
+            Assert.That(prefs.Load<string>("following"), Is.EqualTo("must remain readable"));
+
+            await prefs.SaveAsync("first", "tiny");
+            Assert.That(prefs.Load<string>("first"), Is.EqualTo("tiny"));
+            Assert.That(prefs.Load<string>("following"), Is.EqualTo("must remain readable"));
+
+            prefs = factory();
+            Assert.That(prefs.Load<string>("first"), Is.EqualTo("tiny"));
+            Assert.That(prefs.Load<string>("following"), Is.EqualTo("must remain readable"));
         }
 
         public static async ValueTask HasKey_Works(Func<ILocalPrefs> factory)
@@ -206,6 +230,20 @@ namespace AndanteTribe.IO.Tests
             await prefs.SaveAsync("c", 3);
             await prefs.DeleteAsync("b");
 
+            Assert.That(prefs.Load<int>("a"), Is.EqualTo(1));
+            Assert.That(prefs.Load<int>("b"), Is.EqualTo(0));
+            Assert.That(prefs.Load<int>("c"), Is.EqualTo(3));
+        }
+
+        public static async ValueTask Delete_SecondElement_OtherInstance_PreservesRemainingValues(Func<ILocalPrefs> factory)
+        {
+            var prefs = factory();
+            await prefs.SaveAsync("a", 1);
+            await prefs.SaveAsync("b", 2);
+            await prefs.SaveAsync("c", 3);
+            await prefs.DeleteAsync("b");
+
+            prefs = factory();
             Assert.That(prefs.Load<int>("a"), Is.EqualTo(1));
             Assert.That(prefs.Load<int>("b"), Is.EqualTo(0));
             Assert.That(prefs.Load<int>("c"), Is.EqualTo(3));
