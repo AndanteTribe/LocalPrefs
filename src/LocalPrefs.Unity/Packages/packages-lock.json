@@ -8,11 +8,11 @@
       "hash": "d30cb64a988ac3ecfd31bd9dc96e38422a729e47"
     },
     "com.github.messagepack-csharp": {
-      "version": "https://github.com/MessagePack-CSharp/MessagePack-CSharp.git?path=src/MessagePack.UnityClient/Assets/Scripts/MessagePack",
+      "version": "https://github.com/MessagePack-CSharp/MessagePack-CSharp.git?path=src/MessagePack.UnityClient/Assets/Scripts/MessagePack#v3.1.8",
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "e9ba7483fe45b4b1d133d6c3a0bf0529e212522f"
+      "hash": "9f80a327ae139203c1e48fa678f95cf45e878963"
     },
     "com.unity.ext.nunit": {
       "version": "2.0.5",
