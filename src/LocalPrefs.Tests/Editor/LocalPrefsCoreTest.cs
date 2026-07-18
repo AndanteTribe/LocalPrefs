@@ -117,6 +117,10 @@ namespace AndanteTribe.IO.Tests
             LocalPrefsTest.Delete_SecondElement(factory).AsTask();
 
         [TestCaseSource(nameof(s_factories))]
+        public Task Delete_SecondElement_OtherInstance_PreservesRemainingValues(Func<ILocalPrefs> factory) =>
+            LocalPrefsTest.Delete_SecondElement_OtherInstance_PreservesRemainingValues(factory).AsTask();
+
+        [TestCaseSource(nameof(s_factories))]
         public Task AddAndRemoveMultipleTimes(Func<ILocalPrefs> factory) =>
             LocalPrefsTest.AddAndRemoveMultipleTimes(factory).AsTask();
 

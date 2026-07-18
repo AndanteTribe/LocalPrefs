@@ -202,6 +202,15 @@ namespace AndanteTribe.IO.Unity.Tests
         }
 
         [UnityTest]
+        public IEnumerator Delete_SecondElement_OtherInstance_PreservesRemainingValues([ValueSource(nameof(s_factories))] Func<ILocalPrefs> factory)
+        {
+            yield return new ToCoroutineEnumerator(async () =>
+            {
+                await LocalPrefsTest.Delete_SecondElement_OtherInstance_PreservesRemainingValues(factory);
+            });
+        }
+
+        [UnityTest]
         public IEnumerator AddAndRemoveMultipleTimes([ValueSource(nameof(s_factories))] Func<ILocalPrefs> factory)
         {
             yield return new ToCoroutineEnumerator(async () =>
