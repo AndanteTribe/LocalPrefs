@@ -19,9 +19,7 @@ namespace AndanteTribe.IO.Unity
             RunContinuationsAsynchronously = false
         };
         private GCHandle _handle;
-        private bool _isCompleted;
-        private bool _isNativeCompleted;
-        private bool _isConsumerCompleted;
+        private CompletionState _completionState;
 
         public IntPtr Handle => GCHandle.ToIntPtr(_handle);
         public Memory<byte> Buffer { get; set; }
@@ -49,87 +47,94 @@ namespace AndanteTribe.IO.Unity
 
         public void SetResult()
         {
-            if (!TryBeginNativeCompletion())
+            if (!_completionState.TryAddFlag(CompletionState.NativeCompletionStarted))
             {
                 return;
             }
 
             try
             {
-                if (!_isCompleted)
+                if (!_completionState.TryAddFlag(CompletionState.ManagedCompleted))
                 {
-                    _isCompleted = true;
-                    _core.SetResult((Array.Empty<byte>(), 0));
+                    return;
                 }
+
+                _core.SetResult((Array.Empty<byte>(), 0));
             }
             finally
             {
-                FinishNativeCompletion();
+                _handle.Free();
+                _completionState.AddFlag(CompletionState.NativeCompleted);
+                TryReset();
             }
         }
 
         public unsafe void SetResult(IntPtr dataPtr, int length)
         {
-            if (!TryBeginNativeCompletion())
+            if (!_completionState.TryAddFlag(CompletionState.NativeCompletionStarted))
             {
                 return;
             }
 
             try
             {
-                if (!_isCompleted)
+                if (!_completionState.TryAddFlag(CompletionState.ManagedCompleted))
                 {
-                    var dataSpan = new Span<byte>(dataPtr.ToPointer(), length);
-                    if (!Buffer.IsEmpty)
-                    {
-                        var size = Math.Min(length, Buffer.Length);
-                        dataSpan[..size].CopyTo(Buffer.Span);
-                        _isCompleted = true;
-                        _core.SetResult((Array.Empty<byte>(), size));
-                    }
-                    else
-                    {
-                        var data = dataSpan.ToArray();
-                        _isCompleted = true;
-                        _core.SetResult((data, length));
-                    }
+                    return;
+                }
+
+                var dataSpan = new Span<byte>(dataPtr.ToPointer(), length);
+                if (!Buffer.IsEmpty)
+                {
+                    var size = Math.Min(length, Buffer.Length);
+                    dataSpan[..size].CopyTo(Buffer.Span);
+                    _core.SetResult((Array.Empty<byte>(), size));
+                }
+                else
+                {
+                    var data = dataSpan.ToArray();
+                    _core.SetResult((data, length));
                 }
             }
             finally
             {
-                FinishNativeCompletion();
+                _handle.Free();
+                _completionState.AddFlag(CompletionState.NativeCompleted);
+                TryReset();
             }
         }
 
         public void SetException(Exception error)
         {
-            if (!TryBeginNativeCompletion())
+            if (!_completionState.TryAddFlag(CompletionState.NativeCompletionStarted))
             {
                 return;
             }
 
             try
             {
-                if (!_isCompleted)
+                if (!_completionState.TryAddFlag(CompletionState.ManagedCompleted))
                 {
-                    _isCompleted = true;
-                    _core.SetException(error);
+                    return;
                 }
+
+                _core.SetException(error);
             }
             finally
             {
-                FinishNativeCompletion();
+                _handle.Free();
+                _completionState.AddFlag(CompletionState.NativeCompleted);
+                TryReset();
             }
         }
 
         public void SetCanceled()
         {
-            if (_isCompleted)
+            if (!_completionState.TryAddFlag(CompletionState.ManagedCompleted))
             {
                 return;
             }
 
-            _isCompleted = true;
             _core.SetException(new TaskCanceledException());
         }
 
@@ -144,7 +149,8 @@ namespace AndanteTribe.IO.Unity
             }
             finally
             {
-                CompleteConsumer();
+                _completionState.AddFlag(CompletionState.ConsumerCompleted);
+                TryReset();
             }
         }
 
@@ -156,7 +162,8 @@ namespace AndanteTribe.IO.Unity
             }
             finally
             {
-                CompleteConsumer();
+                _completionState.AddFlag(CompletionState.ConsumerCompleted);
+                TryReset();
             }
         }
 
@@ -165,41 +172,16 @@ namespace AndanteTribe.IO.Unity
         public void OnCompleted(Action<object?> continuation, object? state, short token, ValueTaskSourceOnCompletedFlags flags)
             => _core.OnCompleted(continuation, state, token, flags);
 
-        private bool TryBeginNativeCompletion()
-        {
-            if (_isNativeCompleted)
-            {
-                return false;
-            }
-
-            _isNativeCompleted = true;
-            return true;
-        }
-
-        private void FinishNativeCompletion()
-        {
-            _handle.Free();
-            TryReset();
-        }
-
-        private void CompleteConsumer()
-        {
-            _isConsumerCompleted = true;
-            TryReset();
-        }
-
         private void TryReset()
         {
-            if (!_isNativeCompleted || !_isConsumerCompleted)
+            if (!_completionState.HasAllFlags(CompletionState.NativeCompleted | CompletionState.ConsumerCompleted))
             {
                 return;
             }
 
             _core.Reset();
             Buffer = default;
-            _isCompleted = false;
-            _isNativeCompleted = false;
-            _isConsumerCompleted = false;
+            _completionState = CompletionState.None;
             _next = s_head;
             s_head = this;
         }
