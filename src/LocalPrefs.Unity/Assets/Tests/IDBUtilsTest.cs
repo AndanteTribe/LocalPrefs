@@ -6,6 +6,7 @@ using System.Collections;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using UnityEngine;
 using UnityEngine.TestTools;
 
 namespace AndanteTribe.IO.Unity.Tests
@@ -32,7 +33,7 @@ namespace AndanteTribe.IO.Unity.Tests
                 }
 
                 // Allow the canceled browser request to deliver its terminal callback before the pooled source is reused.
-                await Task.Delay(100);
+                await Awaitable.WaitForSecondsAsync(0.1f);
 
                 var expected = new byte[] { 1, 2, 3, 4 };
                 await IDBUtils.WriteAllBytesAsync(path, expected);
