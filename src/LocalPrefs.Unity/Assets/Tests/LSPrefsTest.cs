@@ -1,4 +1,4 @@
-﻿#if UNITY_WEBGL
+#if UNITY_WEBGL
 #nullable enable
 
 using System;
@@ -189,6 +189,15 @@ namespace AndanteTribe.IO.Unity.Tests
             yield return new ToCoroutineEnumerator(async () =>
             {
                 await LocalPrefsTest.Delete_SecondElement(factory);
+            });
+        }
+
+        [UnityTest]
+        public IEnumerator Delete_SecondElement_OtherInstance_PreservesRemainingValues([ValueSource(nameof(s_factories))] Func<ILocalPrefs> factory)
+        {
+            yield return new ToCoroutineEnumerator(async () =>
+            {
+                await LocalPrefsTest.Delete_SecondElement_OtherInstance_PreservesRemainingValues(factory);
             });
         }
 
