@@ -1,6 +1,6 @@
-﻿using MessagePack;
-using MessagePack.Formatters;
 using AndanteTribe.IO.Internal;
+using MessagePack;
+using MessagePack.Formatters;
 
 namespace AndanteTribe.IO.MessagePack;
 
@@ -128,10 +128,10 @@ public class MessagePackLocalPrefs : ILocalPrefs
                 }
             }
 
-            var diff = prev.count - _header[key].count;
+            var offsetDelta = _header[key].count - prev.count;
             foreach (var (k, (o, c)) in updateKeys.AsSpan())
             {
-                _header[k] = (o + diff, c);
+                _header[k] = (o + offsetDelta, c);
             }
         }
         else

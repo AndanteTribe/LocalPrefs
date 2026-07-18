@@ -1,4 +1,4 @@
-﻿#if UNITY_WEBGL
+#if UNITY_WEBGL
 #nullable enable
 
 using System;
@@ -104,6 +104,15 @@ namespace AndanteTribe.IO.Unity.Tests
             yield return new ToCoroutineEnumerator(async () =>
             {
                 await LocalPrefsTest.OverwriteValue_OtherInstance(factory);
+            });
+        }
+
+        [UnityTest]
+        public IEnumerator OverwriteValue_DifferentSize_PreservesFollowingValue([ValueSource(nameof(s_factories))] Func<ILocalPrefs> factory)
+        {
+            yield return new ToCoroutineEnumerator(async () =>
+            {
+                await LocalPrefsTest.OverwriteValue_DifferentSize_PreservesFollowingValue(factory);
             });
         }
 
