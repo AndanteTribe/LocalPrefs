@@ -100,6 +100,30 @@ namespace AndanteTribe.IO.Tests
             Assert.That(value, Is.EqualTo(2));
         }
 
+        public static async ValueTask OverwriteValue_DifferentSize_PreservesFollowingValue(Func<ILocalPrefs> factory)
+        {
+            var prefs = factory();
+            await prefs.SaveAsync("first", "short");
+            await prefs.SaveAsync("following", "must remain readable");
+
+            const string longValue = "a value long enough to change its serialized size";
+            await prefs.SaveAsync("first", longValue);
+            Assert.That(prefs.Load<string>("first"), Is.EqualTo(longValue));
+            Assert.That(prefs.Load<string>("following"), Is.EqualTo("must remain readable"));
+
+            prefs = factory();
+            Assert.That(prefs.Load<string>("first"), Is.EqualTo(longValue));
+            Assert.That(prefs.Load<string>("following"), Is.EqualTo("must remain readable"));
+
+            await prefs.SaveAsync("first", "tiny");
+            Assert.That(prefs.Load<string>("first"), Is.EqualTo("tiny"));
+            Assert.That(prefs.Load<string>("following"), Is.EqualTo("must remain readable"));
+
+            prefs = factory();
+            Assert.That(prefs.Load<string>("first"), Is.EqualTo("tiny"));
+            Assert.That(prefs.Load<string>("following"), Is.EqualTo("must remain readable"));
+        }
+
         public static async ValueTask HasKey_Works(Func<ILocalPrefs> factory)
         {
             var prefs = factory();

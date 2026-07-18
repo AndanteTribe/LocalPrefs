@@ -73,6 +73,10 @@ namespace AndanteTribe.IO.Tests
             LocalPrefsTest.OverwriteValue_OtherInstance(factory).AsTask();
 
         [TestCaseSource(nameof(s_factories))]
+        public Task OverwriteValue_DifferentSize_PreservesFollowingValue(Func<ILocalPrefs> factory) =>
+            LocalPrefsTest.OverwriteValue_DifferentSize_PreservesFollowingValue(factory).AsTask();
+
+        [TestCaseSource(nameof(s_factories))]
         public Task HasKey_Works(Func<ILocalPrefs> factory) =>
             LocalPrefsTest.HasKey_Works(factory).AsTask();
 

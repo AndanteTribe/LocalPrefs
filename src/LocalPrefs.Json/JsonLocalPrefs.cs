@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using AndanteTribe.IO.Internal;
 
@@ -106,10 +106,10 @@ public class JsonLocalPrefs : ILocalPrefs
                 }
             }
 
-            var diff = prev.count - _header[key].count;
+            var offsetDelta = _header[key].count - prev.count;
             foreach (var (k, (o, c)) in updateKeys.AsSpan())
             {
-                _header[k] = (o + diff, c);
+                _header[k] = (o + offsetDelta, c);
             }
         }
         else

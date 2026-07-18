@@ -108,6 +108,15 @@ namespace AndanteTribe.IO.Unity.Tests
         }
 
         [UnityTest]
+        public IEnumerator OverwriteValue_DifferentSize_PreservesFollowingValue([ValueSource(nameof(s_factories))] Func<ILocalPrefs> factory)
+        {
+            yield return new ToCoroutineEnumerator(async () =>
+            {
+                await LocalPrefsTest.OverwriteValue_DifferentSize_PreservesFollowingValue(factory);
+            });
+        }
+
+        [UnityTest]
         public IEnumerator HasKey_Works([ValueSource(nameof(s_factories))] Func<ILocalPrefs> factory)
         {
             yield return new ToCoroutineEnumerator(async () =>
