@@ -1,4 +1,4 @@
-﻿#if UNITY_WEBGL
+#if UNITY_WEBGL
 #nullable enable
 
 using System;
@@ -19,6 +19,7 @@ namespace AndanteTribe.IO.Unity
             RunContinuationsAsynchronously = false
         };
         private GCHandle _handle;
+        private CompletionState _completionState;
 
         public IntPtr Handle => GCHandle.ToIntPtr(_handle);
         public Memory<byte> Buffer { get; set; }
@@ -44,26 +45,98 @@ namespace AndanteTribe.IO.Unity
             return instance;
         }
 
-        public void SetResult() => _core.SetResult((Array.Empty<byte>(), 0));
-
-        public unsafe void SetResult(IntPtr dataPtr, int length)
+        public void SetResult()
         {
-            var dataSpan = new Span<byte>(dataPtr.ToPointer(), length);
-            if (!Buffer.IsEmpty)
+            if (!_completionState.TryAddFlag(CompletionState.NativeCompletionStarted))
             {
-                var size = Math.Min(length, Buffer.Length);
-                dataSpan[..size].CopyTo(Buffer.Span);
-                _core.SetResult((Array.Empty<byte>(), size));
+                return;
             }
-            else
+
+            try
             {
-                _core.SetResult((dataSpan.ToArray(), length));
+                if (!_completionState.TryAddFlag(CompletionState.ManagedCompleted))
+                {
+                    return;
+                }
+
+                _core.SetResult((Array.Empty<byte>(), 0));
+            }
+            finally
+            {
+                _handle.Free();
+                _completionState.AddFlag(CompletionState.NativeCompleted);
+                TryReset();
             }
         }
 
-        public void SetException(Exception error) => _core.SetException(error);
+        public unsafe void SetResult(IntPtr dataPtr, int length)
+        {
+            if (!_completionState.TryAddFlag(CompletionState.NativeCompletionStarted))
+            {
+                return;
+            }
 
-        public void SetCanceled() => _core.SetException(new TaskCanceledException());
+            try
+            {
+                if (!_completionState.TryAddFlag(CompletionState.ManagedCompleted))
+                {
+                    return;
+                }
+
+                var dataSpan = new Span<byte>(dataPtr.ToPointer(), length);
+                if (!Buffer.IsEmpty)
+                {
+                    var size = Math.Min(length, Buffer.Length);
+                    dataSpan[..size].CopyTo(Buffer.Span);
+                    _core.SetResult((Array.Empty<byte>(), size));
+                }
+                else
+                {
+                    var data = dataSpan.ToArray();
+                    _core.SetResult((data, length));
+                }
+            }
+            finally
+            {
+                _handle.Free();
+                _completionState.AddFlag(CompletionState.NativeCompleted);
+                TryReset();
+            }
+        }
+
+        public void SetException(Exception error)
+        {
+            if (!_completionState.TryAddFlag(CompletionState.NativeCompletionStarted))
+            {
+                return;
+            }
+
+            try
+            {
+                if (!_completionState.TryAddFlag(CompletionState.ManagedCompleted))
+                {
+                    return;
+                }
+
+                _core.SetException(error);
+            }
+            finally
+            {
+                _handle.Free();
+                _completionState.AddFlag(CompletionState.NativeCompleted);
+                TryReset();
+            }
+        }
+
+        public void SetCanceled()
+        {
+            if (!_completionState.TryAddFlag(CompletionState.ManagedCompleted))
+            {
+                return;
+            }
+
+            _core.SetException(new TaskCanceledException());
+        }
 
         public short Version => _core.Version;
 
@@ -76,7 +149,8 @@ namespace AndanteTribe.IO.Unity
             }
             finally
             {
-                Reset();
+                _completionState.AddFlag(CompletionState.ConsumerCompleted);
+                TryReset();
             }
         }
 
@@ -88,7 +162,8 @@ namespace AndanteTribe.IO.Unity
             }
             finally
             {
-                Reset();
+                _completionState.AddFlag(CompletionState.ConsumerCompleted);
+                TryReset();
             }
         }
 
@@ -97,13 +172,18 @@ namespace AndanteTribe.IO.Unity
         public void OnCompleted(Action<object?> continuation, object? state, short token, ValueTaskSourceOnCompletedFlags flags)
             => _core.OnCompleted(continuation, state, token, flags);
 
-        private void Reset()
+        private void TryReset()
         {
+            if (!_completionState.HasAllFlags(CompletionState.NativeCompleted | CompletionState.ConsumerCompleted))
+            {
+                return;
+            }
+
             _core.Reset();
             Buffer = default;
+            _completionState = CompletionState.None;
             _next = s_head;
             s_head = this;
-            _handle.Free();
         }
     }
 }
