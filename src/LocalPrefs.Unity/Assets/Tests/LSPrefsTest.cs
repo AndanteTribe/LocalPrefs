@@ -218,6 +218,26 @@ namespace AndanteTribe.IO.Unity.Tests
                 await LocalPrefsTest.AddAndRemoveMultipleTimes(factory);
             });
         }
+
+        [Test]
+        public void LSStream_MultipleWrites_ArePersistedOnFlush()
+        {
+            const string path = "ls-stream-buffered-write";
+            try
+            {
+                using var stream = new LSStream(path);
+                stream.Write(new byte[] { 1, 2 }, 0, 2);
+                stream.Write(new byte[] { 3, 4 }, 0, 2);
+
+                Assert.That(LSUtils.ReadAllBytes(path), Is.Empty);
+                stream.Flush();
+                Assert.That(LSUtils.ReadAllBytes(path), Is.EqualTo(new byte[] { 1, 2, 3, 4 }));
+            }
+            finally
+            {
+                LSUtils.Delete(path);
+            }
+        }
     }
 }
 
