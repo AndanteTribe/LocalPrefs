@@ -763,7 +763,8 @@ PlayerSettings:
   webGLWebAssemblyBigInt: 0
   webGLCloseOnQuit: 0
   webWasm2023: 0
-  scriptingDefineSymbols: {}
+  scriptingDefineSymbols:
+    WebGL: ENABLE_DEBUGTOOLKIT
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend: {}

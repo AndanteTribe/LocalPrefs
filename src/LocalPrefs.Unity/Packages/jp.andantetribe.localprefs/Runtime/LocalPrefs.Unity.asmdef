@@ -22,6 +22,11 @@
             "name": "com.github.messagepack-csharp",
             "expression": "",
             "define": "ENABLE_MESSAGEPACK"
+        },
+        {
+            "name": "com.unity.modules.uielements",
+            "expression": "",
+            "define": "ENABLE_UITOOLKIT"
         }
     ],
     "noEngineReferences": false
